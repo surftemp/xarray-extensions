@@ -6,9 +6,15 @@ library to add useful functions to xarray
 
 To use these, clone this repo and place the root directory on your python path.  
 
-Then import the module into your code using `import xarray_extensions`.  Doing so will attach the following extra methods to xarray DataArray and Dataset objects:
+Then import the module into your code using 
 
-         
+```
+import xarray_extensions.timeseries  # for timeseries extensions
+import xarray_extensions.general     # for general extensions
+```
+
+Doing so will attach the following extra methods to xarray DataArray and Dataset objects:
+ 
   <section id="dataarray-methods-timeseries">
 <h1>DataArray methods - timeseries<a class="headerlink" href="#dataarray-methods-timeseries" title="Permalink to this headline">¶</a></h1>
 <p>xarray 0.19.0 or later is recommended.  These methods extend xarray with timeseries functionality.</p>
