@@ -9,6 +9,9 @@ xarray.Dataset
 
 import xarray as xr
 
+from .check_version import check_version
+check_version()
+
 def safe_assign(self, da, name=""):
     """
     Attach a DataArray as a variable to a Dataset, working around a bug in xarray when using simple assignment

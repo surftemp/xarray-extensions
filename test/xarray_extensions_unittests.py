@@ -79,19 +79,36 @@ class Test(unittest.TestCase):
         npt.assert_almost_equal(ds3coeffs.data, exp_ds3coeffs)
 
     def test_lagged_correlation(self):
-        da = xr.DataArray(data=np.array([[[math.sin(math.pi * 2 * i / 12) for i in range(1, 25)]]]),
+        nlats = 5
+        nlons = 8
+        da = xr.DataArray(data=np.array(
+            [[[math.sin(math.pi * 2 * i / 12) * (lon + 1) / (lat + 3) for i in range(1, 250)] for lon in range(nlons)]
+             for lat in range(nlats)]),
+                          dims=["lat", "lon", "time"],
+                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
+                                           range(1, 250)]})
+        da2 = da * 2
+
+        da3 = da.lagged_correlation(da2,lags=[-6,-3,0,3,6])
+        self.assertEqual(da3.dims, ('lat', 'lon', 'lag'))
+        expected_correlations = np.array([[[-1,0,1,0,-1] for lon in range(nlons)] for lat in range(nlats)])
+        npt.assert_almost_equal(da3.data,expected_correlations,decimal=3)
+
+    def test_lagged_regression(self):
+        nlats = 10
+        nlons = 7
+        da = xr.DataArray(data=np.array([[[math.sin(math.pi * 2 * i / 12)*(lon+1)/(lat+3) for i in range(1, 25)] for lon in range(nlons)] for lat in range(nlats)]),
                            dims=["lat", "lon", "time"],
                            coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
                                             range(1, 25)]})
-        ts = xr.DataArray(data=np.array([math.sin(math.pi * 2 * i / 12) for i in range(1, 25)]),
-                                   dims=["time"],
-                                   coords={
-                                       "time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
-                                                range(1, 25)]})
+        da2 = da*2+1
 
-        ds = da.lagged_correlation(ts,lags=[-6,-3,0,3,6])
-        expected_correlations = np.array([[[-1,0,1,0,-1]]])
-        npt.assert_almost_equal(ds.data,expected_correlations,decimal=1)
+        da3 = da.lagged_regression(da2,lags=[-6,-3,0,3,6])
+        self.assertEqual(da3.dims,('lat','lon','lag','parameter'))
+
+        npt.assert_almost_equal(da3.data[:, :, 0], np.array([[[-2,1] for lat in range(nlons)] for lon in range(nlats)]),decimal=1)
+        npt.assert_almost_equal(da3.data[:, :, 2], np.array([[[2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
+        npt.assert_almost_equal(da3.data[:, :, 4], np.array([[[-2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
 
     def test_safe_assign(self):
         ds = xr.Dataset()

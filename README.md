@@ -72,17 +72,48 @@ plus the model means</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.timeseries.lagged_correlation">
 <span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">lagged_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">otherda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.lagged_correlation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Obtain pearson correlation coefficients between this DataArray and another DataArray</p>
+<dd><p>Obtain pearson correlation coefficients between this DataArray and another DataArray, with a series of lags applied</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
 <li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the other dataset before calculating the correlation coefficient</p></li>
+<li><p><strong>coefficient_type</strong> (<em>str</em>) – the type of coefficient to compute, either “pearson” or “regression”.
+if “regression”, the regression model is trained to estimate values in “otherda” based on values this array
+and the slope of is returned.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an xarray.DataArray instance having dimensions (lags,lat,lon)</p>
+<dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
+dimension</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is attached to the DataArray class as a method when this module is imported</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.timeseries.lagged_regression">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">lagged_regression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">otherda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.lagged_regression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain linear regression coefficients between this DataArray and another DataArray, with a series of lags applied.
+The other DataArray is treated as the y variable, this DataArray is treated as the x variable and the coefficients
+returned are the values [m,c] from y = mx+c</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
+<li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
+<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the other dataset before calculating the regression coefficient for each lag</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
+dimension and an extra parameter dimension added (with size 2, where index 0 holds the slope value m and index 1
+holds the intercept value c)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
@@ -115,5 +146,4 @@ See <a class="reference external" href="https://github.com/pydata/xarray/issues/
 </dd></dl>
 
 </section>
-
 

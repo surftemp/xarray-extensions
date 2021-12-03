@@ -12,6 +12,7 @@ include `import xarray_extensions.timeseries` in your code to add these methods 
 .. autofunction:: deseasonalised
 .. autofunction:: detrended
 .. autofunction:: lagged_correlation
+.. autofunction:: lagged_regression
 
 .. currentmodule:: xarray_extensions.general
 

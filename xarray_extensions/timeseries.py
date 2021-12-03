@@ -6,16 +6,19 @@ Importing this module attaches extra methods to xarray DataArray and Dataset cla
 xarray.DataArray:
     deseasonalised - model monthly climatology and return model or remove seasonal pattern from data
     detrended - model trends using linear or quadratic and return model or remove trend from data
-    lagged_correlation - compute and return the pearson correlation with another dataarray for specified lags/leads
+    lagged_correlation - compute and return the pearson correlation or regression coefficient
+               with another dataarray for specified lags/leads
 
 xarray.Dataset
     safe_assign - assign a dataarray to the dataset without losing some attribute values due to a bug in xarray
 """
 
-
+from scipy import stats
 import xarray as xr
 import numpy as np
 
+from .check_version import check_version
+check_version()
 
 def deseasonalised(self, clim=False, abs=True):
     """
@@ -122,10 +125,9 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False)
             diffs = diffs + trend.mean(dim="time")
         return diffs
 
-
 def lagged_correlation(self, otherda, lags):
     """
-    Obtain pearson correlation coefficients between this DataArray and another DataArray
+    Obtain pearson correlation coefficients between this DataArray and another DataArray, with a series of lags applied
 
     Parameters
     ----------
@@ -135,11 +137,16 @@ def lagged_correlation(self, otherda, lags):
        the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)
     lags: list[int]
        a list of lags to apply to the other dataset before calculating the correlation coefficient
+    coefficient_type: str
+       the type of coefficient to compute, either "pearson" or "regression".
+       if "regression", the regression model is trained to estimate values in "otherda" based on values this array
+       and the slope of is returned.
 
     Returns
     -------
     xarray.DataArray
-       an xarray.DataArray instance having dimensions (lags,lat,lon)
+       an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
+       dimension
 
     Notes
     -----
@@ -156,17 +163,62 @@ def lagged_correlation(self, otherda, lags):
     result = xr.DataArray(data=arr, dims=newdims, coords={"lag": lags})
     for idx in range(len(lags)):
         lag = lags[idx]
-        if lag == 0:
-            corr = xr.corr(self, otherda, "time")
-        elif lag > 0:
-            # compute correlation where self is shifted lag steps ahead of otherda
-            da_shift = self.copy(deep=True).shift({"time": lag})
-            corr = xr.corr(da_shift, otherda, "time")
-        else:
-            # compute correlation where self is shifted abs(lag) steps behind otherda
-            da_shift = self.copy(deep=True).shift({"time": lag})
-            corr = xr.corr(da_shift, otherda, "time")
+        # compute correlation where self is shifted lag steps ahead of otherda
+        da_shift = self.copy(deep=True).shift({"time": lag})
+        corr = xr.corr(da_shift, otherda, "time")
         # assign for this slice
+        result.isel(lag=idx)[...] = corr
+    return result
+
+def lagged_regression(self, otherda, lags):
+    """
+    Obtain linear regression coefficients between this DataArray and another DataArray, with a series of lags applied.
+    The other DataArray is treated as the y variable, this DataArray is treated as the x variable and the coefficients
+    returned are the values [m,c] from y = mx+c
+
+    Parameters
+    ----------
+    self: xarray.DataArray
+       the DataArray instance to which this method is bound, assumed to include a "time" dimension
+    otherda: xarray.DataArray
+       the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)
+    lags: list[int]
+       a list of lags to apply to the other dataset before calculating the regression coefficient for each lag
+
+    Returns
+    -------
+    xarray.DataArray
+       an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
+       dimension and an extra parameter dimension added (with size 2, where index 0 holds the slope value m and index 1
+       holds the intercept value c)
+
+    Notes
+    -----
+
+    This function is attached to the DataArray class as a method when this module is imported
+    """
+    time_index = self.dims.index("time")
+
+    # replace the time dimension in the input data with lag
+    newshape = list(self.shape) + [2]
+    newdims = ["lag" if i == time_index else self.dims[i] for i in range(len(self.dims))] + ["parameter"]
+    newshape[time_index] = len(lags)
+    arr = np.zeros(tuple(newshape))
+    result = xr.DataArray(data=arr, dims=newdims, coords={"lag": lags})
+
+    def linregression(x, y):
+        mask = ~np.isnan(x) & ~np.isnan(y)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], y[mask])
+        return np.array([slope,intercept])
+
+    for idx in range(len(lags)):
+        lag = lags[idx]
+        # compute correlation where self is shifted lag steps ahead of otherda
+        da_shift = self.copy(deep=True).shift({"time": lag})
+        corr = xr.apply_ufunc(linregression, da_shift, otherda,
+            input_core_dims=[['time'], ['time']], output_core_dims=[["parameter"]],
+            vectorize=True, dask="parallelized", output_dtypes=['float64'])
+         # assign for this slice
         result.isel(lag=idx)[...] = corr
     return result
 
@@ -176,5 +228,6 @@ from .utils import bind_method
 bind_method(xr.DataArray, deseasonalised)
 bind_method(xr.DataArray, detrended)
 bind_method(xr.DataArray, lagged_correlation)
+bind_method(xr.DataArray, lagged_regression)
 
 
