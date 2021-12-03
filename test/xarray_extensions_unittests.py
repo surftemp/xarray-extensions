@@ -119,5 +119,19 @@ class Test(unittest.TestCase):
         # we had used ds["test2"] = ... to assign the data array
         self.assertEqual(ds["dim1"].attrs["metadata"],"some metadata")
 
+    def test_longitude_center_zero(self):
+        ds = xr.Dataset()
+        from random import random
+        ds["test1"] = xr.DataArray(data=np.array([random() for i in range(0,360)]),dims=["lon"],coords={"lon":[i for i in range(0,360)]})
+        ds["lon"].attrs["valid_min"] = 0
+        ds["lon"].attrs["valid_max"] = 359
+        ds2 = ds.longitude_center_zero()
+        expected = ds["test1"].roll({"lon":-180}).data
+        expected_lon = np.array([i for i in range(-180,180)])
+        npt.assert_equal(expected,ds2["test1"].values)
+        npt.assert_equal(expected_lon,ds2["lon"].values)
+        self.assertEqual(ds2["lon"].attrs["valid_min"],-180)
+        self.assertEqual(ds2["lon"].attrs["valid_max"],179)
+
 if __name__ == '__main__':
     unittest.main()

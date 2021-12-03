@@ -12,6 +12,44 @@ import xarray as xr
 from .check_version import check_version
 check_version()
 
+def longitude_center_zero(self,longitude_name="lon"):
+    """
+    Center longitude axis on 0.  If the original longitude axis ranges from 0 <= lon < 360, modify the dataset so that the new one should range from -180 to 180.
+
+    Parameters
+    ----------
+    self: xarray.Dataset
+       the DataSet instance to be modified in place
+    longitude_name: str
+       the name of the longitude dimension
+
+    Returns
+    -------
+    xarray.Dataset
+       A new dataset with the longitude axis adjusted and data arrays shifted accordingly.  The original attributes of the
+       longitude dimension are retained, but valid_min and valid_max are modified (if present)
+
+    Raises
+    ------
+    Exception
+        If the input longitude axis has values outside the range 0 <= lon < 360
+
+    Notes
+    -----
+
+    Contributed by Ross Maidment
+    """
+    if self[longitude_name].min() < 0 or self[longitude_name].max() >= 360:
+        raise Exception("longitude coordinate values cannot be < 0 or >= 360")
+    newds = self.assign_coords(**{longitude_name:(((self[longitude_name] + 180) % 360) - 180)}).sortby(longitude_name)
+    newds[longitude_name].attrs = self[longitude_name].attrs.copy()
+    if "valid_min" in newds[longitude_name].attrs:
+        newds[longitude_name].attrs["valid_min"] = newds[longitude_name].min()
+    if "valid_max" in newds[longitude_name].attrs:
+        newds[longitude_name].attrs["valid_max"] = newds[longitude_name].max()
+    return newds
+
+
 def safe_assign(self, da, name=""):
     """
     Attach a DataArray as a variable to a Dataset, working around a bug in xarray when using simple assignment
@@ -47,3 +85,4 @@ def safe_assign(self, da, name=""):
 from .utils import bind_method
 
 bind_method(xr.Dataset, safe_assign)
+bind_method(xr.Dataset, longitude_center_zero)

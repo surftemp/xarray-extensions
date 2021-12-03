@@ -145,5 +145,31 @@ See <a class="reference external" href="https://github.com/pydata/xarray/issues/
 <p>This function is attached to the DataSet class as a method when this module is imported</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.general.longitude_center_zero">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.general.</span></span><span class="sig-name descname"><span class="pre">longitude_center_zero</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lon'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.general.longitude_center_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Center longitude axis on 0.  If the original longitude axis ranges from 0 &lt;= lon &lt; 360, modify the dataset so that the new one should range from -180 to 180.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.Dataset</em>) – the DataSet instance to be modified in place</p></li>
+<li><p><strong>longitude_name</strong> (<em>str</em>) – the name of the longitude dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new dataset with the longitude axis adjusted and data arrays shifted accordingly.  The original attributes of the
+longitude dimension are retained, but valid_min and valid_max are modified (if present)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xarray.Dataset</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the input longitude axis has values outside the range 0 &lt;= lon &lt; 360</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Contributed by Ross Maidment</p>
+</dd></dl>
+
 </section>
 

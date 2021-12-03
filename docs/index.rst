@@ -23,3 +23,4 @@ Dataset Methods - general
 include `import xarray_extensions.general` in your code to add these methods to xarray.Dataset
 
 .. autofunction:: safe_assign
+.. autofunction:: longitude_center_zero
