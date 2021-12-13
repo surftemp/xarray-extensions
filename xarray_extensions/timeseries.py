@@ -208,8 +208,11 @@ def lagged_regression(self, otherda, lags):
 
     def linregression(x, y):
         mask = ~np.isnan(x) & ~np.isnan(y)
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], y[mask])
-        return np.array([slope,intercept])
+        if not np.any(mask):
+            return np.array([np.nan,np.nan])
+        else:
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], y[mask])
+            return np.array([slope,intercept])
 
     for idx in range(len(lags)):
         lag = lags[idx]

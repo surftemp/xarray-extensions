@@ -110,6 +110,17 @@ class Test(unittest.TestCase):
         npt.assert_almost_equal(da3.data[:, :, 2], np.array([[[2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
         npt.assert_almost_equal(da3.data[:, :, 4], np.array([[[-2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
 
+        da4 = xr.DataArray(data=np.array([[[np.nan for i in range(1, 25)] for lon in range(nlons)] for lat in range(nlats)]),dims=["lat", "lon", "time"],
+                           coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
+                                            range(1, 25)]})
+        da5 = xr.DataArray(data=np.array([[[np.nan for i in range(1, 25)] for lon in range(nlons)] for lat in range(nlats)]),dims=["lat", "lon", "time"],
+                           coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
+                                            range(1, 25)]})
+        da6 = da4.lagged_regression(da5, lags=[-6, -3, 0, 3, 6])
+        npt.assert_almost_equal(da6.data[:,:,0,:],
+                                np.array([[[np.nan,np.nan] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
+
+
     def test_safe_assign(self):
         ds = xr.Dataset()
         ds["test1"] = xr.DataArray(data=np.array([1,2,3]),dims=["dim1"],coords={"dim1":[100,101,102]})
