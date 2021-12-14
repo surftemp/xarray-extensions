@@ -15,9 +15,8 @@ import xarray_extensions.general     # for general extensions
 
 Doing so will attach the following extra methods to xarray DataArray and Dataset objects:
  
-  <section id="dataarray-methods-timeseries">
+<section id="dataarray-methods-timeseries">
 <h1>DataArray methods - timeseries<a class="headerlink" href="#dataarray-methods-timeseries" title="Permalink to this headline">¶</a></h1>
-<p>xarray 0.19.0 or later is recommended.  These methods extend xarray with timeseries functionality.</p>
 <p>include <cite>import xarray_extensions.timeseries</cite> in your code to add these methods to xarray.DataArray</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.timeseries.deseasonalised">
@@ -117,6 +116,90 @@ holds the intercept value c)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is attached to the DataArray class as a method when this module is imported</p>
+</dd></dl>
+
+</section>
+<section id="dataarray-methods-data-reduction">
+<h1>DataArray methods - data reduction<a class="headerlink" href="#dataarray-methods-data-reduction" title="Permalink to this headline">¶</a></h1>
+<p>include <cite>import xarray_extensions.data_reduction</cite> in your code to add these methods to xarray.DataArray</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.data_reduction.pca">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.data_reduction.</span></span><span class="sig-name descname"><span class="pre">pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.data_reduction.pca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract and return the principle components for this data array after reducing along a target dimension</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
+<li><p><strong>dimension</strong> (<em>str</em>) – the name of the target dimension to be reduced</p></li>
+<li><p><strong>n_components</strong> (<em>int</em>) – the number of components to extract, which must be less than the length of the target dimension</p></li>
+<li><p><strong>model_callback</strong> (<em>function</em>) – if provided, this method will be invoked with a sklearn.decomposition.PCA object after fitting
+(see <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html">https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html</a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an xarray.DataArray instance with the target dimension replaced by a dimension of a size
+controlled by the n_components parameter</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is attached to the DataArray class as a method when this module is imported</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.data_reduction.som">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.data_reduction.</span></span><span class="sig-name descname"><span class="pre">som</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridheight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_neighbourhood</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.data_reduction.som" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract and return the self organising map coordinates for this data array after reducing along a target dimension</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
+<li><p><strong>dimension</strong> (<em>str</em>) – the name of the target dimension to be reduced</p></li>
+<li><p><strong>iters</strong> (<em>int</em>) – the number of training iterations to use when training the SOM</p></li>
+<li><p><strong>gridwidth</strong> (<em>int</em>) – number of cells across the grid</p></li>
+<li><p><strong>gridheight</strong> (<em>int</em>) – number of cells down the grid</p></li>
+<li><p><strong>initial_neighbourhood</strong> (<em>int</em>) – the initial neighbourhood size</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – random seed - set to produce repeatable results</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – whether to print progress messages (SOM can take some time to run)</p></li>
+<li><p><strong>model_callback</strong> (<em>function</em>) – if provided, this method will be invoked with a SelfOrganisingMap object
+(see source code of this module)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an xarray.DataArray instance with the target dimension replaced by a dimension of size 2</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is attached to the DataArray class as a method when this module is imported</p>
+</dd></dl>
+
+</section>
+<section id="dataarray-methods-plots">
+<h1>DataArray methods - plots<a class="headerlink" href="#dataarray-methods-plots" title="Permalink to this headline">¶</a></h1>
+<p>include <cite>import xarray_extensions.plots</cite> in your code to add these methods to xarray.DataArray</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.plots.rgb_plot">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.plots.</span></span><span class="sig-name descname"><span class="pre">rgb_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb_dimensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">None]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">null_rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.plots.rgb_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a 3D array relying on a selected dimension of size 1, 2 or 3, for example, an array returned from the
+data reduction operators som or pca</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
+<li><p><strong>dimension</strong> (<em>str</em>) – the name of the target dimension used to derive colour</p></li>
+<li><p><strong>rgb_dimensions</strong> (<em>tuple</em><em>[</em><em>int</em><em>,</em><em>int</em><em>,</em><em>int</em><em>]</em>) – indexes into the dimension to use for colours red,green abd blue (or None to use a fixed colour)</p></li>
+<li><p><strong>fixed_rgb</strong> (<em>tuple</em><em>(</em><em>float</em><em>,</em><em>float</em><em>,</em><em>float</em><em>)</em>) – for colour dimensions which are not indexed (rgb_dimensions parameter), specify the value in the range 0-1</p></li>
+<li><p><strong>null_rgb</strong> (<em>tuple</em><em>(</em><em>float</em><em>,</em><em>float</em><em>,</em><em>float</em><em>)</em>) – plot nan/null values using this rgb colour (values in the range 0-1)</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Notes</p>

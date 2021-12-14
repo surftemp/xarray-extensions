@@ -3,7 +3,7 @@ import xarray as xr
 import numpy as np
 
 
-def rgb_plot(self,dimension,rgb_dimensions=[0,1,None],fixed_rgb=(0.5,0.5,0.5),null_rgb=(0,0,0)):
+def rgb_plot(self,dimension,rgb_dimensions=[0,1,None],fixed_rgb=(0.5,0.5,0.5),null_rgb=(0.5,0.5,0.5)):
     """
     Plot a 3D array relying on a selected dimension of size 1, 2 or 3, for example, an array returned from the
     data reduction operators som or pca

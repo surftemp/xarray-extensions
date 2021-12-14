@@ -160,8 +160,8 @@ def som(self, dimension="time", gridwidth=16, gridheight=16, iters=25, initial_n
     """
     Extract and return the self organising map coordinates for this data array after reducing along a target dimension
 
-    Keyword Parameters
-    ------------------
+    Parameters
+    ----------
     self: xarray.DataArray
        the DataArray instance to which this method is bound
     dimension: str
@@ -237,10 +237,29 @@ def pca(self, dimension="time", n_components=2, model_callback=None):
     """
     stack_dims = tuple(x for x in self.dims if x != dimension)
     stack_sizes = tuple(self.values.shape[i] for i in range(len(self.dims)) if self.dims[i] != dimension)
-    instances = self.stack(case=stack_dims).transpose("case", dimension)
+
+    instances = self.stack(case=stack_dims).transpose("case", dimension).values
+    (nr_instances, nr_values) = instances.shape
+
+    # for any instances containing at least one NaNs, record those and replace all values with dummy (zero) values.
+    # PCA cannot handle NaNs.
+    mask = np.all(~np.isnan(instances),axis=1)
+    instance_mask = np.expand_dims(mask,1)
+    instance_mask = np.tile(instance_mask,nr_values)
+    instances = np.where(instance_mask,instances,0)
+
     pca = PCA(n_components=n_components)
     factor_scores = pca.fit_transform(instances)
+
+    # for instances that had NaNs replaced with zero, replace the dummy factor scores with NaN.
+    factor_scores_mask = np.expand_dims(mask, 1)
+    factor_scores_mask = np.tile(factor_scores_mask, n_components)
+    factor_scores = np.where(factor_scores_mask, factor_scores, np.nan)
+
+    # reshape the factor scores back to the original axes
     a = factor_scores.reshape(stack_sizes + (n_components,))
+
+    # create a DataArray object for output
     new_coords = {}
     for key in self.coords:
         if key != dimension:
