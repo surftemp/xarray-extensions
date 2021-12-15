@@ -3,7 +3,7 @@ import xarray as xr
 import numpy as np
 
 
-def rgb_plot(self,dimension,rgb_dimensions=[0,1,None],fixed_rgb=(0.5,0.5,0.5),null_rgb=(0.5,0.5,0.5)):
+def rgb_plot(self,dimension,rgb_dimensions=[0,1,None],fixed_rgb=(0,0,0),null_rgb=(0.5,0.5,0.5)):
     """
     Plot a 3D array relying on a selected dimension of size 1, 2 or 3, for example, an array returned from the
     data reduction operators som or pca
@@ -29,7 +29,11 @@ def rgb_plot(self,dimension,rgb_dimensions=[0,1,None],fixed_rgb=(0.5,0.5,0.5),nu
     fns = [lambda v:fixed_rgb[0],lambda v: fixed_rgb[1],lambda v: fixed_rgb[2]]
 
     def make_function(idx, dim_min,dim_max):
-        return lambda v: (v[idx] - dim_min) / (dim_max - dim_min) if not np.isnan(v[idx]) else null_rgb[idx]
+        if rgb_dimensions[idx] is None:
+            return fixed_rgb[idx]
+        else:
+            data_idx = rgb_dimensions[idx]
+            return lambda v: (v[data_idx] - dim_min) / (dim_max - dim_min) if not np.isnan(v[data_idx]) else null_rgb[idx]
 
     for idx in range(len(rgb_dimensions)):
         dim = rgb_dimensions[idx]
@@ -38,7 +42,6 @@ def rgb_plot(self,dimension,rgb_dimensions=[0,1,None],fixed_rgb=(0.5,0.5,0.5),nu
             dim_max = float(self[:,:,dim].max())
             if dim_max > dim_min:
                 fns[idx] = make_function(idx,dim_min,dim_max)
-
 
     def colorize(v):
         r = fns[0](v)
