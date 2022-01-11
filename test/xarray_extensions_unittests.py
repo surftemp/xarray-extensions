@@ -86,13 +86,17 @@ class Test(unittest.TestCase):
              for lat in range(nlats)]),
                           dims=["lat", "lon", "time"],
                           coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
-                                           range(1, 250)]})
+                                           range(1, 250)],
+                                  "lat": [lat for lat in range(nlats)],
+                                  "lon": [lon for lon in range(nlons)]})
         da2 = da * 2
 
         da3 = da.lagged_correlation(da2,lags=[-6,-3,0,3,6])
         self.assertEqual(da3.dims, ('lat', 'lon', 'lag'))
         expected_correlations = np.array([[[-1,0,1,0,-1] for lon in range(nlons)] for lat in range(nlats)])
         npt.assert_almost_equal(da3.data,expected_correlations,decimal=3)
+        npt.assert_equal(da3.coords["lat"],np.array([lat for lat in range(nlats)]))
+        npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
     def test_lagged_correlation_sig(self):
         nlats = 5
@@ -116,7 +120,9 @@ class Test(unittest.TestCase):
         da = xr.DataArray(data=np.array([[[math.sin(math.pi * 2 * i / 12)*(lon+1)/(lat+3) for i in range(1, 25)] for lon in range(nlons)] for lat in range(nlats)]),
                            dims=["lat", "lon", "time"],
                            coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
-                                            range(1, 25)]})
+                                            range(1, 25)],
+                                   "lat": [lat for lat in range(nlats)],
+                                   "lon": [lon for lon in range(nlons)]})
         da2 = da*2+1
 
         da3 = da.lagged_regression(da2,lags=[-6,-3,0,3,6])
@@ -135,6 +141,8 @@ class Test(unittest.TestCase):
         da6 = da4.lagged_regression(da5, lags=[-6, -3, 0, 3, 6])
         npt.assert_almost_equal(da6.data[:,:,0,:],
                                 np.array([[[np.nan,np.nan] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
+        npt.assert_equal(da3.coords["lat"],np.array([lat for lat in range(nlats)]))
+        npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
 
     def test_safe_assign(self):

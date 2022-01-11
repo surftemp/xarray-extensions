@@ -177,7 +177,12 @@ def lagged_correlation(self, otherda, lags, ci=None, dof=None):
 
     newshape[time_index] = len(lags)
     arr = np.zeros(tuple(newshape))
-    result = xr.DataArray(data=arr, dims=newdims, coords={"lag": lags})
+    coords = {"lag": lags}
+    for coord in self.coords:
+        if coord != "time":
+            coords[coord] = self.coords[coord]
+
+    result = xr.DataArray(data=arr, dims=newdims, coords=coords)
     for idx in range(len(lags)):
         lag = lags[idx]
         # compute correlation where self is shifted lag steps ahead of otherda
@@ -226,7 +231,13 @@ def lagged_regression(self, otherda, lags):
     newdims = ["lag" if i == time_index else self.dims[i] for i in range(len(self.dims))] + ["parameter"]
     newshape[time_index] = len(lags)
     arr = np.zeros(tuple(newshape))
-    result = xr.DataArray(data=arr, dims=newdims, coords={"lag": lags})
+
+    coords = {"lag": lags}
+    for coord in self.coords:
+        if coord != "time":
+            coords[coord] = self.coords[coord]
+
+    result = xr.DataArray(data=arr, dims=newdims, coords=coords)
 
     def linregression(x, y):
         mask = ~np.isnan(x) & ~np.isnan(y)
