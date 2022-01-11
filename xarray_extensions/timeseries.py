@@ -16,7 +16,7 @@ xarray.Dataset
 from scipy import stats
 import xarray as xr
 import numpy as np
-
+import math
 from .check_version import check_version
 check_version()
 
@@ -125,9 +125,13 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False)
             diffs = diffs + trend.mean(dim="time")
         return diffs
 
-def lagged_correlation(self, otherda, lags):
+def lagged_correlation(self, otherda, lags, ci=None, dof=None):
     """
     Obtain pearson correlation coefficients between this DataArray and another DataArray, with a series of lags applied
+    return the correlation coefficients
+
+    if significance threshold is to be calculated, return an extra parameter dimension with the correlation at index 0 and
+    the two-tailed significance threshold at index 1
 
     Parameters
     ----------
@@ -137,11 +141,11 @@ def lagged_correlation(self, otherda, lags):
        the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)
     lags: list[int]
        a list of lags to apply to the other dataset before calculating the correlation coefficient
-    coefficient_type: str
-       the type of coefficient to compute, either "pearson" or "regression".
-       if "regression", the regression model is trained to estimate values in "otherda" based on values this array
-       and the slope of is returned.
-
+    ci: float
+       specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)
+    dof: int
+       set the degrees of freedom manually
+       (TODO, if not specified this should be computed from the data, currently return NaN)
     Returns
     -------
     xarray.DataArray
@@ -153,11 +157,24 @@ def lagged_correlation(self, otherda, lags):
 
     This function is attached to the DataArray class as a method when this module is imported
     """
+
+    def dof_sig_lvl(dof=5, C_I=0.05):
+        t_Dist = stats.t.ppf(1 - C_I * 0.5, dof)
+        V = dof - 2
+        sq_t_Dist = math.pow(t_Dist, 2)
+        r_sig = math.sqrt(sq_t_Dist / (V + sq_t_Dist))
+        return r_sig
+
     time_index = self.dims.index("time")
 
     # replace the time dimension in the input data with lag
     newshape = list(self.shape)
     newdims = ["lag" if i == time_index else self.dims[i] for i in range(len(self.dims))]
+
+    if ci:
+        newdims += ["parameter"]
+        newshape += [2]
+
     newshape[time_index] = len(lags)
     arr = np.zeros(tuple(newshape))
     result = xr.DataArray(data=arr, dims=newdims, coords={"lag": lags})
@@ -167,7 +184,12 @@ def lagged_correlation(self, otherda, lags):
         da_shift = self.copy(deep=True).shift({"time": lag})
         corr = xr.corr(da_shift, otherda, "time")
         # assign for this slice
-        result.isel(lag=idx)[...] = corr
+        if ci:
+            result.isel(lag=idx, parameter=0)[...] = corr
+            # TODO work out degrees of freedom if not explicitly provided
+            result.isel(lag=idx, parameter=1)[...] = dof_sig_lvl(dof,ci) if dof else np.nan
+        else:
+            result.isel(lag=idx)[...] = corr
     return result
 
 def lagged_regression(self, otherda, lags):

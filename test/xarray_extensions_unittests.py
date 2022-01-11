@@ -94,6 +94,22 @@ class Test(unittest.TestCase):
         expected_correlations = np.array([[[-1,0,1,0,-1] for lon in range(nlons)] for lat in range(nlats)])
         npt.assert_almost_equal(da3.data,expected_correlations,decimal=3)
 
+    def test_lagged_correlation_sig(self):
+        nlats = 5
+        nlons = 8
+        da = xr.DataArray(data=np.array(
+            [[[math.sin(math.pi * 2 * i / 12) * (lon + 1) / (lat + 3) for i in range(1, 250)] for lon in range(nlons)]
+             for lat in range(nlats)]),
+                          dims=["lat", "lon", "time"],
+                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
+                                           range(1, 250)]})
+        da2 = da * 2
+
+        da3 = da.lagged_correlation(da2,lags=[-6,-3,0,3,6],ci=0.05,dof=100)
+        self.assertEqual(da3.dims, ('lat', 'lon', 'lag', 'parameter'))
+        expected_correlations = np.array([[[-1,0,1,0,-1] for lon in range(nlons)] for lat in range(nlats)])
+        npt.assert_almost_equal(da3.isel(parameter=0).data,expected_correlations,decimal=3)
+
     def test_lagged_regression(self):
         nlats = 10
         nlons = 7
