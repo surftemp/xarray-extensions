@@ -55,8 +55,17 @@ def rgb_plot(self,dimension,rgb_dimensions=[0,1,None],fixed_rgb=(0,0,0),null_rgb
 
     plt.imshow(rgb_data)
     plt.grid(False)
-    plt.show()
+
+# def data_reduction_legend(self,dimension,rgb_dimensions,original_da,original_dimension,height,width,
+#                           height_dimension="lat",width_dimension="lon"):
+#     dim_len = len(original_da[original_dimension])
+#     ranges =
+#     for dimension in rgb_dimensions:
+#     y_max = self.isel(**{min(axis=)
+#     sums = np.zeros(shape=(height,width,dim_len))
+
 
 from xarray_extensions.utils import bind_method
 
 bind_method(xr.DataArray, rgb_plot)
+# bind_method(xr.DataArray, data_reduction_legend)
