@@ -179,8 +179,8 @@ def lagged_correlation(self, otherda, lags, ci=None, dof=None):
     arr = np.zeros(tuple(newshape))
     coords = {"lag": lags}
     for coord in self.coords:
-        if coord != "time":
-            coords[coord] = self.coords[coord]
+        if coord != "time" and coord in newdims:
+                coords[coord] = self.coords[coord]
 
     result = xr.DataArray(data=arr, dims=newdims, coords=coords)
     for idx in range(len(lags)):
@@ -234,7 +234,7 @@ def lagged_regression(self, otherda, lags):
 
     coords = {"lag": lags}
     for coord in self.coords:
-        if coord != "time":
+        if coord != "time" and coord in newdims:
             coords[coord] = self.coords[coord]
 
     result = xr.DataArray(data=arr, dims=newdims, coords=coords)
