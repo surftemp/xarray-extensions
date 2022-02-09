@@ -1,5 +1,6 @@
 
-xarray 0.19.0 or later is recommended.  These methods extend xarray with timeseries functionality.
+xarray 0.19.0 or later is required, attempting to import these extensions with an earlier version of xarray will cause
+an exception to the thrown.  These methods extend xarray with timeseries and various other functionality.
 
 .. currentmodule:: xarray_extensions.timeseries
 
@@ -12,7 +13,9 @@ include `import xarray_extensions.timeseries` in your code to add these methods 
 .. autofunction:: deseasonalised
 .. autofunction:: detrended
 .. autofunction:: lagged_correlation
+.. autofunction:: lagged_correlation_month_of_year
 .. autofunction:: lagged_regression
+.. autofunction:: lagged_regression_month_of_year
 
 .. currentmodule:: xarray_extensions.data_reduction
 
