@@ -14,7 +14,8 @@ import xarray_extensions.general     # for general extensions
 ```
 
 Doing so will attach the following extra methods to xarray DataArray and Dataset objects:
- 
+ <p>xarray 0.19.0 or later is required, attempting to import these extensions with an earlier version of xarray will cause
+an exception to the thrown.  These methods extend xarray with timeseries and various other functionality.</p>
 <section id="dataarray-methods-timeseries">
 <h1>DataArray methods - timeseries<a class="headerlink" href="#dataarray-methods-timeseries" title="Permalink to this headline">¶</a></h1>
 <p>include <cite>import xarray_extensions.timeseries</cite> in your code to add these methods to xarray.DataArray</p>
@@ -70,17 +71,20 @@ plus the model means</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.timeseries.lagged_correlation">
-<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">lagged_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">otherda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.lagged_correlation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Obtain pearson correlation coefficients between this DataArray and another DataArray, with a series of lags applied</p>
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">lagged_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">otherda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.lagged_correlation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain pearson correlation coefficients between this DataArray and another DataArray, with a series of lags applied
+return the correlation coefficients</p>
+<p>if significance threshold is to be calculated, return an extra parameter dimension with the correlation at index 0 and
+the two-tailed significance threshold at index 1</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
-<li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
+<li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
 <li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the other dataset before calculating the correlation coefficient</p></li>
-<li><p><strong>coefficient_type</strong> (<em>str</em>) – the type of coefficient to compute, either “pearson” or “regression”.
-if “regression”, the regression model is trained to estimate values in “otherda” based on values this array
-and the slope of is returned.</p></li>
+<li><p><strong>ci</strong> (<em>float</em>) – specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)</p></li>
+<li><p><strong>dof</strong> (<em>int</em>) – set the degrees of freedom manually
+(TODO, if not specified this should be computed from the data, currently return NaN)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -90,9 +94,67 @@ dimension</p>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
+</dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>This function is attached to the DataArray class as a method when this module is imported</p>
+<p>This function is attached to the DataArray class as a method when this module (xarray_extensions.timeseries)
+is imported.</p>
+<p class="rubric">Example</p>
+<p>A way you might use me is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sla</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SLA</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+<span class="n">sst</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SST</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+
+<span class="c1"># get the correlations between SLAs and SSTs that occur one month earlier</span>
+<span class="n">correlation</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">lagged_correlation</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.timeseries.lagged_correlation_month_of_year">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">lagged_correlation_month_of_year</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">otherda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month_of_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.lagged_correlation_month_of_year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain pearson correlation coefficients between a yearly timeseries extracted from this DataArray at a particular month
+and those from another DataArray, with a series of lags applied return the correlation coefficients</p>
+<p>if significance threshold is to be calculated, return an extra parameter dimension with the correlation at index 0 and
+the two-tailed significance threshold at index 1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the main DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
+<li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
+<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags (in terms of numbers of months) to apply to the other dataset before calculating the correlation
+coefficient.  Note a lag of 1 means that the other dataset is shifted to be a month behind the main dataset.</p></li>
+<li><p><strong>month_of_year</strong> (<em>int</em>) – indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray</p></li>
+<li><p><strong>ci</strong> (<em>float</em>) – specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)</p></li>
+<li><p><strong>dof</strong> (<em>int</em>) – set the degrees of freedom manually
+(TODO, if not specified this should be computed from the data, currently return NaN)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
+dimension</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is attached to the DataArray class as a method when this module (xarray_extensions.timeseries)
+is imported.</p>
+<p class="rubric">Example</p>
+<p>A way you might use me is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sla</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SLA</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+<span class="n">sst</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SST</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+
+<span class="c1"># get the correlations between april SLAs and march SSTs over successive years</span>
+<span class="n">correlation</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">lagged_correlation_month_of_year</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">month_of_year</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -117,9 +179,66 @@ holds the intercept value c)</p>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
+</dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>This function is attached to the DataArray class as a method when this module is imported</p>
+<p>This function is attached to the DataArray class as a method when this module (xarray_extensions.timeseries)
+is imported.</p>
+<p class="rubric">Example</p>
+<p>A way you might use me is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sla</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SLA</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+<span class="n">sst</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SST</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+
+<span class="c1"># get the regression coefficients to fit a linear model predicting SLA from SSTs that occur one month and two months earlier</span>
+<span class="c1"># the returned coefficient parameters  m,c are such that sla = m*sst + c</span>
+<span class="n">correlation</span> <span class="o">=</span> <span class="n">sst</span><span class="o">.</span><span class="n">lagged_regression</span><span class="p">(</span><span class="n">sla</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.timeseries.lagged_regression_month_of_year">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">lagged_regression_month_of_year</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">otherda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month_of_year</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.lagged_regression_month_of_year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain linear regression coefficients between this between a yearly timeseries extracted from this DataArray
+at a particular month and those from another DataArray, with a series of lags applied, and return the
+regression coefficients.</p>
+<p>The other DataArray is treated as the y variable, this DataArray is treated as the x variable and the coefficients
+returned are the values [m,c] from y = mx+c</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
+<li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
+<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the other dataset before calculating the regression coefficient for each lag</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
+dimension and an extra parameter dimension added (with size 2, where index 0 holds the slope value m and index 1
+holds the intercept value c)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is attached to the DataArray class as a method when this module (xarray_extensions.timeseries)
+is imported.</p>
+<p class="rubric">Example</p>
+<p>A way you might use me is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sla</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SLA</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+<span class="n">sst</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SST</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
+
+<span class="c1"># get the regression coefficients for linear model relating June SLA from May and April SSTs</span>
+<span class="c1"># the returned coefficient parameters  m,c are such that sst = m*sla + c</span>
+<span class="n">correlation</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">lagged_regression_month_of_year</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">month_of_year</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
@@ -188,7 +307,7 @@ controlled by the n_components parameter</p>
 <p>include <cite>import xarray_extensions.plots</cite> in your code to add these methods to xarray.DataArray</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.plots.rgb_plot">
-<span class="sig-prename descclassname"><span class="pre">xarray_extensions.plots.</span></span><span class="sig-name descname"><span class="pre">rgb_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb_dimensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">None]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">null_rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.plots.rgb_plot" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.plots.</span></span><span class="sig-name descname"><span class="pre">rgb_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb_dimensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">None]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">null_rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.plots.rgb_plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a 3D array relying on a selected dimension of size 1, 2 or 3, for example, an array returned from the
 data reduction operators som or pca</p>
 <dl class="field-list simple">
@@ -255,4 +374,3 @@ longitude dimension are retained, but valid_min and valid_max are modified (if p
 </dd></dl>
 
 </section>
-
