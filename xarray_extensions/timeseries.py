@@ -171,7 +171,7 @@ def __prepare_lagged_results(da,lags,extra_dim=None):
     return xr.DataArray(data=arr, dims=newdims, coords=coords)
 
 def __compute_correlation(da,otherda,lag,idx,ci,dof,result):
-    # compute correlation where self is shifted lag steps ahead of otherda
+    # compute correlation where self is shifted lag steps behind of otherda
     # store the correlation in the result array at lag=idx
     da_shift = da.copy(deep=True).shift({"time": lag})
     corr = xr.corr(da_shift, otherda, "time")
@@ -194,12 +194,12 @@ def lagged_correlation_month_of_year(self, otherda, lags, month_of_year, ci=None
     Parameters
     ----------
     self: xarray.DataArray
-       the main DataArray instance to which this method is bound, assumed to include a "time" dimension
+       the main DataArray instance (to which this method is bound), assumed to include a "time" dimension
     otherda: xarray.DataArray
        the other DataArray against which the correlation is to be performed, assumed to have a "time" dimensions
     lags: list[int]
        a list of lags (in terms of numbers of months) to apply to the other dataset before calculating the correlation
-       coefficient.  Note a lag of 1 means that the other dataset is shifted to be a month behind the main dataset.
+       coefficient.  Note a lag of 1 means that the main data array lags a month after the other dataset.
     month_of_year: int
        indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray
     ci: float
@@ -232,7 +232,7 @@ def lagged_correlation_month_of_year(self, otherda, lags, month_of_year, ci=None
         sst = ... get the monthly SST as a DataArray
 
         # get the correlations between april SLAs and march SSTs over successive years
-        correlation = sla.lagged_correlation_month_of_year(sst, lags=[1], month_of_year=4)
+        correlation = sla.lagged_correlation_month_of_year(sst, lags=[-1], month_of_year=4)
     """
 
     __check_time_axis(self, otherda)
@@ -241,13 +241,13 @@ def lagged_correlation_month_of_year(self, otherda, lags, month_of_year, ci=None
 
     # select out the chosen month from the first array
     da0 = self.sel(time=self.time.dt.month.isin([month_of_year]))
-    da0_times = list(map(lambda dt: dt.astype('datetime64[M]'),da0.time.values))
+    da0_times = list(map(lambda dt: dt.astype('datetime64[M]'), da0.time.values))
     da0 = da0.assign_coords(time=da0_times)
 
     for idx in range(len(lags)):
         lag = lags[idx]
-        other_shift = otherda.shift({"time": lag}).assign_coords(time=self.time.values)
-        da1 = other_shift.sel(time=other_shift.time.dt.month.isin([month_of_year]))
+        other_shift = otherda.shift({"time": lag})
+        da1 = other_shift.sel(time=other_shift.time.dt.month.isin([month_of_year])).assign_coords(time=da0_times)
         __compute_correlation(da0, da1, 0, idx, ci, dof, result)
 
     return result
@@ -268,6 +268,7 @@ def lagged_correlation(self, otherda, lags, ci=None, dof=None):
        the other DataArray against which the correlation is to be performed, assumed to have a "time" dimensions
     lags: list[int]
        a list of lags to apply to the other dataset before calculating the correlation coefficient
+       Note a lag of 1 means that the main data array lags a month after the other dataset.
     ci: float
        specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)
     dof: int
@@ -298,7 +299,7 @@ def lagged_correlation(self, otherda, lags, ci=None, dof=None):
         sst = ... get the monthly SST as a DataArray
 
         # get the correlations between SLAs and SSTs that occur one month earlier
-        correlation = sla.lagged_correlation(sst, lags=[1])
+        correlation = sla.lagged_correlation(sst, lags=[-1])
     """
 
     __check_time_axis(self, otherda)
@@ -321,7 +322,7 @@ def __compute_regression(da,otherda,lag,idx,result):
             slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], y[mask])
             return np.array([slope, intercept])
 
-    # compute regression where da is shifted lag steps ahead of otherda
+    # compute regression where da is shifted lag steps behind of otherda
     da_shift = da.shift({"time": lag})
     coeffs = xr.apply_ufunc(linregression, da_shift, otherda,
         input_core_dims=[['time'], ['time']], output_core_dims=[["parameter"]],
@@ -347,7 +348,8 @@ def lagged_regression_month_of_year(self, otherda, lags, month_of_year):
     otherda: xarray.DataArray
        the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)
     lags: list[int]
-       a list of lags to apply to the other dataset before calculating the regression coefficient for each lag
+       a list of lags to apply to the main dataset before calculating the regression coefficient for each lag
+       Note a lag of 1 means that the main data array lags a month after the other dataset.
 
     Returns
     -------
@@ -375,7 +377,7 @@ def lagged_regression_month_of_year(self, otherda, lags, month_of_year):
 
         # get the regression coefficients for linear model relating June SLA from May and April SSTs
         # the returned coefficient parameters  m,c are such that sst = m*sla + c
-        correlation = sla.lagged_regression_month_of_year(sst, lags=[1,2], month_of_year=6)
+        correlation = sst.lagged_regression_month_of_year(sla, lags=[1,2], month_of_year=6)
     """
 
     __check_time_axis(self, otherda)
@@ -389,8 +391,8 @@ def lagged_regression_month_of_year(self, otherda, lags, month_of_year):
 
     for idx in range(len(lags)):
         lag = lags[idx]
-        other_shift = otherda.shift({"time": lag}).assign_coords(time=self.time.values)
-        da1 = other_shift.sel(time=other_shift.time.dt.month.isin([month_of_year]))
+        other_shift = otherda.shift({"time": -lag})
+        da1 = other_shift.sel(time=other_shift.time.dt.month.isin([month_of_year])).assign_coords(time=da0_times)
         __compute_regression(da0, da1, 0, idx, result)
 
     return result
@@ -411,6 +413,7 @@ def lagged_regression(self, otherda, lags):
        the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)
     lags: list[int]
        a list of lags to apply to the other dataset before calculating the regression coefficient for each lag
+       Note a lag of 1 means that the main data array lags a month after the other dataset.
 
     Returns
     -------
@@ -438,7 +441,7 @@ def lagged_regression(self, otherda, lags):
 
         # get the regression coefficients to fit a linear model predicting SLA from SSTs that occur one month and two months earlier
         # the returned coefficient parameters  m,c are such that sla = m*sst + c
-        correlation = sst.lagged_regression(sla, lags=[-1,-2])
+        correlation = sst.lagged_regression(sla, lags=[1,2])
     """
 
     __check_time_axis(self, otherda)

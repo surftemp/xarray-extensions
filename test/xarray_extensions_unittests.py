@@ -200,12 +200,12 @@ class Test(unittest.TestCase):
             [[[rng.random() for i in range(1, ntimes)] for lon in range(nlons)]
              for lat in range(nlats)]),
                           dims=["lat", "lon", "time"],
-                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
+                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 15,12,0,0) for i in
                                            range(1, ntimes)],
                                   "lat": [lat for lat in range(nlats)],
                                   "lon": [lon for lon in range(nlons)]})
 
-        da2 = da.shift({"time":-1}) # da2 is da, shifted 1 month "earlier"
+        da2 = da.shift({"time": 1}) # da2 is da, shifted 1 month "later"
         da2neg = da.shift({"time": 12}) * -1 # da2neg is da2 shifted 12 months "later" and inverted
 
         da3 = da.lagged_correlation_month_of_year(da,lags=[-1,0,1],month_of_year=1)
@@ -232,7 +232,7 @@ class Test(unittest.TestCase):
         expected_correlations = np.array([[[1] for lon in range(nlons)] for lat in range(nlats)])
         npt.assert_almost_equal(da4.data, expected_correlations, decimal=3)
 
-        da5 = da.lagged_correlation_month_of_year(da2neg, lags=[-12], month_of_year=1)
+        da5 = da.lagged_correlation_month_of_year(da2neg, lags=[12], month_of_year=1)
         expected_correlations = np.array([[[-1] for lon in range(nlons)] for lat in range(nlats)])
         npt.assert_almost_equal(da5.data, expected_correlations, decimal=3)
 
@@ -250,12 +250,12 @@ class Test(unittest.TestCase):
             [[[rng.random() for i in range(1, ntimes)] for lon in range(nlons)]
              for lat in range(nlats)]),
                           dims=["lat", "lon", "time"],
-                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
+                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 15, 12, 0 ,0) for i in
                                            range(1, ntimes)],
                                   "lat": [lat for lat in range(nlats)],
                                   "lon": [lon for lon in range(nlons)]})
 
-        da2 = da.shift({"time":-1}) * 2 # da2 is da, shifted 1 month "earlier" and doubled
+        da2 = da.shift({"time":1}) * 2 # da2 is da, shifted 1 month "later" and doubled
         da2neg = da.shift({"time": 12}) * -1 + 3 # da2neg is da2 shifted 12 months "later" and inverted
 
         da3 = da.lagged_regression_month_of_year(da,lags=[-1,0,1],month_of_year=1)
@@ -282,7 +282,7 @@ class Test(unittest.TestCase):
         expected_coefficients = np.array([[[[2,0]] for lon in range(nlons)] for lat in range(nlats)])
         npt.assert_almost_equal(da4.data, expected_coefficients, decimal=3)
 
-        da5 = da.lagged_regression_month_of_year(da2neg, lags=[-12], month_of_year=1)
+        da5 = da.lagged_regression_month_of_year(da2neg, lags=[12], month_of_year=1)
         expected_coefficients = np.array([[[[-1,3]] for lon in range(nlons)] for lat in range(nlats)])
         npt.assert_almost_equal(da5.data, expected_coefficients, decimal=3)
 
