@@ -14,6 +14,7 @@ import xarray_extensions.general     # for general extensions
 ```
 
 Doing so will attach the following extra methods to xarray DataArray and Dataset objects:
+
  <p>xarray 0.19.0 or later is required, attempting to import these extensions with an earlier version of xarray will cause
 an exception to the thrown.  These methods extend xarray with timeseries and various other functionality.</p>
 <section id="dataarray-methods-timeseries">
@@ -81,7 +82,8 @@ the two-tailed significance threshold at index 1</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
-<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the other dataset before calculating the correlation coefficient</p></li>
+<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the correlation coefficient
+where lag=L means that we correlate self[L:,…] with otherda[:-L,…]</p></li>
 <li><p><strong>ci</strong> (<em>float</em>) – specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)</p></li>
 <li><p><strong>dof</strong> (<em>int</em>) – set the degrees of freedom manually
 (TODO, if not specified this should be computed from the data, currently return NaN)</p></li>
@@ -122,10 +124,10 @@ the two-tailed significance threshold at index 1</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the main DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the main DataArray instance (to which this method is bound), assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
-<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags (in terms of numbers of months) to apply to the other dataset before calculating the correlation
-coefficient.  Note a lag of 1 means that the other dataset is shifted to be a month behind the main dataset.</p></li>
+<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the correlation coefficient
+where lag=L means that we correlate self[L:,…] with otherda[:-L,…]</p></li>
 <li><p><strong>month_of_year</strong> (<em>int</em>) – indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray</p></li>
 <li><p><strong>ci</strong> (<em>float</em>) – specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)</p></li>
 <li><p><strong>dof</strong> (<em>int</em>) – set the degrees of freedom manually
@@ -140,7 +142,10 @@ dimension</p>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p></li>
+<li><p><strong>InvalidMonthOfYearException</strong> – if the month_of_year parameter is not an integer in the range 1-12</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -168,7 +173,8 @@ returned are the values [m,c] from y = mx+c</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
-<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the other dataset before calculating the regression coefficient for each lag</p></li>
+<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the regression coefficients
+where lag=L means that we compute the regression coefficients for x=self[L:,…] and y=otherda[:-L,…]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -193,7 +199,7 @@ is imported.</p>
 
 <span class="c1"># get the regression coefficients to fit a linear model predicting SLA from SSTs that occur one month and two months earlier</span>
 <span class="c1"># the returned coefficient parameters  m,c are such that sla = m*sst + c</span>
-<span class="n">correlation</span> <span class="o">=</span> <span class="n">sst</span><span class="o">.</span><span class="n">lagged_regression</span><span class="p">(</span><span class="n">sla</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">correlation</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">lagged_regression</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -211,7 +217,9 @@ returned are the values [m,c] from y = mx+c</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
-<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the other dataset before calculating the regression coefficient for each lag</p></li>
+<li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the regression coefficients
+where lag=L means that we compute the regression coefficients for x=self[L:,…] and y=otherda[:-L,…]</p></li>
+<li><p><strong>month_of_year</strong> (<em>int</em>) – indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -223,7 +231,10 @@ holds the intercept value c)</p>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p></li>
+<li><p><strong>InvalidMonthOfYearException</strong> – if the month_of_year parameter is not an integer in the range 1-12</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Notes</p>

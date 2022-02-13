@@ -80,23 +80,40 @@ class Test(unittest.TestCase):
         exp_ds3coeffs = np.array([[[1,0],[-1,12]]])
         npt.assert_almost_equal(ds3coeffs.data, exp_ds3coeffs)
 
+    def test_lagged_correlation_1D(self):
+        dts = [datetime.datetime(2013,4,15,12,0,0),
+               datetime.datetime(2013,5,15,12,0,0),
+               datetime.datetime(2013,6,15,12,0,0),
+               datetime.datetime(2013,7,15,12,0,0),
+               datetime.datetime(2013,8,15,12,0,0)]
+        lead_values = [1,2,0,-4,-5]
+        lag_values =  [7,1,2,0,-4]
+        lead_da = xr.DataArray(data=np.array([[lead_values]]),dims=["lat", "lon", "time"],
+                               coords={"time": dts,"lat": [0],"lon": [0]})
+        lag_da = xr.DataArray(data=np.array([[lag_values]]), dims=["lat", "lon", "time"],
+                               coords={"time": dts, "lat": [0], "lon": [0]})
+        da3 = lag_da.lagged_correlation(lead_da,lags=[1])
+        expected_correlations = np.array([[[1]]])
+        npt.assert_almost_equal(da3.data,expected_correlations,decimal=3)
+
     def test_lagged_correlation(self):
         nlats = 5
         nlons = 8
         da = xr.DataArray(data=np.array(
-            [[[math.sin(math.pi * 2 * i / 12) * (lon + 1) / (lat + 3) for i in range(1, 250)] for lon in range(nlons)]
+            [[[math.sin(math.pi * 2 * i / 12) * (lon + 1) / (lat + 3) for i in range(1, 250)] for lon in
+              range(nlons)]
              for lat in range(nlats)]),
-                          dims=["lat", "lon", "time"],
-                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
-                                           range(1, 250)],
-                                  "lat": [lat for lat in range(nlats)],
-                                  "lon": [lon for lon in range(nlons)]})
+            dims=["lat", "lon", "time"],
+            coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
+                             range(1, 250)],
+                    "lat": [lat for lat in range(nlats)],
+                    "lon": [lon for lon in range(nlons)]})
         da2 = da * 2
-        da3 = da.lagged_correlation(da2,lags=[-6,-3,0,3,6])
+        da3 = da.lagged_correlation(da2, lags=[-6, -3, 0, 3, 6])
         self.assertEqual(da3.dims, ('lat', 'lon', 'lag'))
-        expected_correlations = np.array([[[-1,0,1,0,-1] for lon in range(nlons)] for lat in range(nlats)])
-        npt.assert_almost_equal(da3.data,expected_correlations,decimal=3)
-        npt.assert_equal(da3.coords["lat"],np.array([lat for lat in range(nlats)]))
+        expected_correlations = np.array([[[-1, 0, 1, 0, -1] for lon in range(nlons)] for lat in range(nlats)])
+        npt.assert_almost_equal(da3.data, expected_correlations, decimal=3)
+        npt.assert_equal(da3.coords["lat"], np.array([lat for lat in range(nlats)]))
         npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
     def test_lagged_correlation_sig(self):
@@ -120,6 +137,7 @@ class Test(unittest.TestCase):
         # are aligned exactly on their time axis
 
         # prepare misaligned da1 and da2 and check that each of the methods throw the correct exception
+        # also check that invalid values for month_of_year also cause the correct exception to be thrown
         nlats = 10
         nlons = 7
         da1 = xr.DataArray(data=np.array(
@@ -160,6 +178,18 @@ class Test(unittest.TestCase):
         except Exception as ex:
             self.assertTrue(isinstance(ex,xarray_extensions.timeseries.MisalignedTimeAxisException))
 
+        try:
+            da1.lagged_regression_month_of_year(da1,lags=[1],month_of_year=0)
+            self.assertTrue(False,"month_of_year check has failed")
+        except Exception as ex:
+            self.assertTrue(isinstance(ex,xarray_extensions.timeseries.InvalidMonthOfYearException))
+
+        try:
+            da1.lagged_regression_month_of_year(da1,lags=[1],month_of_year=13)
+            self.assertTrue(False,"month_of_year check has failed")
+        except Exception as ex:
+            self.assertTrue(isinstance(ex,xarray_extensions.timeseries.InvalidMonthOfYearException))
+
 
     def test_lagged_regression(self):
         nlats = 10
@@ -192,8 +222,8 @@ class Test(unittest.TestCase):
         npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
     def test_lagged_correlation_month_of_year(self):
-        nlats = 5
-        nlons = 8
+        nlats = 50
+        nlons = 80
         ntimes = 48
         rng = random.Random(0)
         da = xr.DataArray(data=np.array(
@@ -205,41 +235,41 @@ class Test(unittest.TestCase):
                                   "lat": [lat for lat in range(nlats)],
                                   "lon": [lon for lon in range(nlons)]})
 
-        da2 = da.shift({"time": 1}) # da2 is da, shifted 1 month "later"
-        da2neg = da.shift({"time": 12}) * -1 # da2neg is da2 shifted 12 months "later" and inverted
+        da2 = da.shift({"time": -1}) # da2 is da, shifted 1 month "later" (da2 lags da by 1 month)
+        da2neg = da.shift({"time": 12}) * -1 # da2neg is da2 shifted 12 months "later" and inverted (da2neg leads da by 12 months)
 
-        da3 = da.lagged_correlation_month_of_year(da,lags=[-1,0,1],month_of_year=1)
-        self.assertEqual(da3.dims, ('lat', 'lon', 'lag'))
-        expected_correlations = np.array([[1 for lon in range(nlons)] for lat in range(nlats)])
-        npt.assert_almost_equal(da3.sel(lag=0).data,expected_correlations,decimal=3)
+        for moy in range(1,13):
+            da3 = da.lagged_correlation_month_of_year(da,lags=[-1,0,1],month_of_year=moy)
+            self.assertEqual(da3.dims, ('lat', 'lon', 'lag'))
+            expected_correlations = np.array([[1 for lon in range(nlons)] for lat in range(nlats)])
+            npt.assert_almost_equal(da3.sel(lag=0).data,expected_correlations,decimal=3)
 
-        try:
-            npt.assert_almost_equal(da3.sel(lag=-1).data, expected_correlations, decimal=3)
-            self.assertTrue(False, "Array contents should NOT be almost equal")
-        except AssertionError:
-            pass
+            try:
+                npt.assert_almost_equal(da3.sel(lag=-1).data, expected_correlations, decimal=3)
+                self.assertTrue(False, "Array contents should NOT be almost equal")
+            except AssertionError:
+                pass
 
-        try:
-            npt.assert_almost_equal(da3.sel(lag=1).data, expected_correlations, decimal=3)
-            self.assertTrue(False, "Array contents should NOT be almost equal")
-        except AssertionError:
-            pass
+            try:
+                npt.assert_almost_equal(da3.sel(lag=1).data, expected_correlations, decimal=3)
+                self.assertTrue(False, "Array contents should NOT be almost equal")
+            except AssertionError:
+                pass
 
-        npt.assert_equal(da3.coords["lat"],np.array([lat for lat in range(nlats)]))
-        npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
+            npt.assert_equal(da3.coords["lat"],np.array([lat for lat in range(nlats)]))
+            npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
-        da4 = da.lagged_correlation_month_of_year(da2, lags=[1], month_of_year=1)
-        expected_correlations = np.array([[[1] for lon in range(nlons)] for lat in range(nlats)])
-        npt.assert_almost_equal(da4.data, expected_correlations, decimal=3)
+            da4 = da.lagged_correlation_month_of_year(da2, lags=[1], month_of_year=1)
+            expected_correlations = np.array([[[1] for lon in range(nlons)] for lat in range(nlats)])
+            npt.assert_almost_equal(da4.data, expected_correlations, decimal=3)
 
-        da5 = da.lagged_correlation_month_of_year(da2neg, lags=[12], month_of_year=1)
-        expected_correlations = np.array([[[-1] for lon in range(nlons)] for lat in range(nlats)])
-        npt.assert_almost_equal(da5.data, expected_correlations, decimal=3)
+            da5 = da.lagged_correlation_month_of_year(da2neg, lags=[-12], month_of_year=moy)
+            expected_correlations = np.array([[[-1] for lon in range(nlons)] for lat in range(nlats)])
+            npt.assert_almost_equal(da5.data, expected_correlations, decimal=3)
 
-        da6 = da.lagged_correlation_month_of_year(da2neg, lags=[11], month_of_year=1)
-        expected_avg_correlations = 0
-        print(da6.data.mean())
-        npt.assert_almost_equal(da6.data.mean(), expected_avg_correlations, decimal=1)
+            da6 = da.lagged_correlation_month_of_year(da2neg, lags=[11], month_of_year=moy)
+            expected_avg_correlations = 0
+            npt.assert_almost_equal(da6.data.mean(), expected_avg_correlations, decimal=1)
 
     def test_lagged_regression_month_of_year(self):
         nlats = 50
@@ -255,36 +285,38 @@ class Test(unittest.TestCase):
                                   "lat": [lat for lat in range(nlats)],
                                   "lon": [lon for lon in range(nlons)]})
 
-        da2 = da.shift({"time":1}) * 2 # da2 is da, shifted 1 month "later" and doubled
-        da2neg = da.shift({"time": 12}) * -1 + 3 # da2neg is da2 shifted 12 months "later" and inverted
+        da2 = da.shift({"time": -1}) *2 # da2 is da, shifted 1 month "later" (da2 lags da by 1 month)
+        da2neg = da.shift(
+            {"time": 12}) * -1 + 3  # da2neg is da2 shifted 12 months "later" and inverted (da2neg leads da by 12 months)
 
-        da3 = da.lagged_regression_month_of_year(da,lags=[-1,0,1],month_of_year=1)
-        self.assertEqual(da3.dims, ('lat', 'lon', 'lag', 'parameter'))
-        expected_coefficients = np.array([[[1,0] for lon in range(nlons)] for lat in range(nlats)])
-        npt.assert_almost_equal(da3.sel(lag=0).data,expected_coefficients,decimal=3)
+        for moy in range(1,13):
+            da3 = da.lagged_regression_month_of_year(da,lags=[-1,0,1],month_of_year=moy)
+            self.assertEqual(da3.dims, ('lat', 'lon', 'lag', 'parameter'))
+            expected_coefficients = np.array([[[1,0] for lon in range(nlons)] for lat in range(nlats)])
+            npt.assert_almost_equal(da3.sel(lag=0).data,expected_coefficients,decimal=3)
 
-        try:
-            npt.assert_almost_equal(da3.sel(lag=-1).data, expected_coefficients, decimal=3)
-            self.assertTrue(False,"Array contents should NOT be almost equal")
-        except AssertionError:
-            pass
+            try:
+                npt.assert_almost_equal(da3.sel(lag=-1).data, expected_coefficients, decimal=3)
+                self.assertTrue(False,"Array contents should NOT be almost equal")
+            except AssertionError:
+                pass
 
-        try:
-            npt.assert_almost_equal(da3.sel(lag=1).data, expected_coefficients, decimal=3)
-            self.assertTrue(False,"Array contents should NOT be almost equal")
-        except AssertionError:
-            pass
+            try:
+                npt.assert_almost_equal(da3.sel(lag=1).data, expected_coefficients, decimal=3)
+                self.assertTrue(False,"Array contents should NOT be almost equal")
+            except AssertionError:
+                pass
 
-        npt.assert_equal(da3.coords["lat"], np.array([lat for lat in range(nlats)]))
-        npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
+            npt.assert_equal(da3.coords["lat"], np.array([lat for lat in range(nlats)]))
+            npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
-        da4 = da.lagged_regression_month_of_year(da2, lags=[1], month_of_year=1)
-        expected_coefficients = np.array([[[[2,0]] for lon in range(nlons)] for lat in range(nlats)])
-        npt.assert_almost_equal(da4.data, expected_coefficients, decimal=3)
+            da4 = da.lagged_regression_month_of_year(da2, lags=[1], month_of_year=moy)
+            expected_coefficients = np.array([[[[2,0]] for lon in range(nlons)] for lat in range(nlats)])
+            npt.assert_almost_equal(da4.data, expected_coefficients, decimal=3)
 
-        da5 = da.lagged_regression_month_of_year(da2neg, lags=[12], month_of_year=1)
-        expected_coefficients = np.array([[[[-1,3]] for lon in range(nlons)] for lat in range(nlats)])
-        npt.assert_almost_equal(da5.data, expected_coefficients, decimal=3)
+            da5 = da.lagged_regression_month_of_year(da2neg, lags=[-12], month_of_year=moy)
+            expected_coefficients = np.array([[[[-1,3]] for lon in range(nlons)] for lat in range(nlats)])
+            npt.assert_almost_equal(da5.data, expected_coefficients, decimal=3)
 
     def test_safe_assign(self):
         ds = xr.Dataset()
