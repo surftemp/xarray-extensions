@@ -204,7 +204,8 @@ def lagged_correlation(self, otherda, lags, ci=None, dof=None):
        the other DataArray against which the correlation is to be performed, assumed to have a "time" dimensions
     lags: list[int]
        a list of lags to apply to the time dimension before calculating the correlation coefficient
-       where lag=L means that we correlate self[L:,...] with otherda[:-L,...]
+       where lag=L means that we correlate self[L:,...] with otherda[:-L,...] for L>=0
+       and self[:-L,...] with otherda[L:,...] for L<0
     ci: float
        specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)
     dof: int
@@ -265,7 +266,8 @@ def lagged_correlation_month_of_year(self, otherda, lags, month_of_year, ci=None
        the other DataArray against which the correlation is to be performed, assumed to have a "time" dimensions
     lags: list[int]
        a list of lags to apply to the time dimension before calculating the correlation coefficient
-       where lag=L means that we correlate self[L:,...] with otherda[:-L,...]
+       where lag=L means that we correlate self[L:,...] with otherda[:-L,...] for L>=0
+       and self[:-L,...] with otherda[L:,...] for L<0
     month_of_year: int
        indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray
     ci: float
@@ -355,7 +357,8 @@ def lagged_regression(self, otherda, lags):
        the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)
     lags: list[int]
        a list of lags to apply to the time dimension before calculating the regression coefficients
-       where lag=L means that we compute the regression coefficients for x=self[L:,...] and y=otherda[:-L,...]
+       where lag=L means that we compute the regression coefficients for x=self[L:,...] and y=otherda[:-L,...] for L>=0
+       and for x=self[:-L,...] and y=otherda[L:,...] for L<0
 
     Returns
     -------
@@ -409,12 +412,13 @@ def lagged_regression_month_of_year(self, otherda, lags, month_of_year):
     Parameters
     ----------
     self: xarray.DataArray
-       the DataArray instance to which this method is bound, assumed to include a "time" dimension
+       the main DataArray instance to which this method is bound, assumed to include a "time" dimension
     otherda: xarray.DataArray
        the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)
     lags: list[int]
        a list of lags to apply to the time dimension before calculating the regression coefficients
-       where lag=L means that we compute the regression coefficients for x=self[L:,...] and y=otherda[:-L,...]
+       where lag=L means that we compute the regression coefficients for x=self[L:,...] and y=otherda[:-L,...] for L>=0
+       and for x=self[:-L,...] and y=otherda[L:,...] for L<0
     month_of_year: int
        indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray
 

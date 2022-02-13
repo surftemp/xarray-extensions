@@ -5,7 +5,6 @@ import datetime
 import numpy as np
 import math
 import numpy.testing as npt
-import matplotlib.pyplot as plt
 
 # this import attaches the extension methods to the DataArray class
 import xarray_extensions.timeseries
@@ -95,6 +94,8 @@ class Test(unittest.TestCase):
         da3 = lag_da.lagged_correlation(lead_da,lags=[1])
         expected_correlations = np.array([[[1]]])
         npt.assert_almost_equal(da3.data,expected_correlations,decimal=3)
+        da4 = lead_da.lagged_correlation(lag_da, lags=[-1])
+        npt.assert_almost_equal(da4.data, expected_correlations, decimal=3)
 
     def test_lagged_correlation(self):
         nlats = 5

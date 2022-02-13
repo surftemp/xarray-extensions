@@ -83,7 +83,8 @@ the two-tailed significance threshold at index 1</p>
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
 <li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the correlation coefficient
-where lag=L means that we correlate self[L:,…] with otherda[:-L,…]</p></li>
+where lag=L means that we correlate self[L:,…] with otherda[:-L,…] for L&gt;=0
+and self[:-L,…] with otherda[L:,…] for L&lt;0</p></li>
 <li><p><strong>ci</strong> (<em>float</em>) – specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)</p></li>
 <li><p><strong>dof</strong> (<em>int</em>) – set the degrees of freedom manually
 (TODO, if not specified this should be computed from the data, currently return NaN)</p></li>
@@ -127,7 +128,8 @@ the two-tailed significance threshold at index 1</p>
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the main DataArray instance (to which this method is bound), assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
 <li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the correlation coefficient
-where lag=L means that we correlate self[L:,…] with otherda[:-L,…]</p></li>
+where lag=L means that we correlate self[L:,…] with otherda[:-L,…] for L&gt;=0
+and self[:-L,…] with otherda[L:,…] for L&lt;0</p></li>
 <li><p><strong>month_of_year</strong> (<em>int</em>) – indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray</p></li>
 <li><p><strong>ci</strong> (<em>float</em>) – specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)</p></li>
 <li><p><strong>dof</strong> (<em>int</em>) – set the degrees of freedom manually
@@ -174,7 +176,8 @@ returned are the values [m,c] from y = mx+c</p>
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
 <li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the regression coefficients
-where lag=L means that we compute the regression coefficients for x=self[L:,…] and y=otherda[:-L,…]</p></li>
+where lag=L means that we compute the regression coefficients for x=self[L:,…] and y=otherda[:-L,…] for L&gt;=0
+and for x=self[:-L,…] and y=otherda[L:,…] for L&lt;0</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -215,10 +218,11 @@ returned are the values [m,c] from y = mx+c</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the main DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
 <li><p><strong>lags</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – a list of lags to apply to the time dimension before calculating the regression coefficients
-where lag=L means that we compute the regression coefficients for x=self[L:,…] and y=otherda[:-L,…]</p></li>
+where lag=L means that we compute the regression coefficients for x=self[L:,…] and y=otherda[:-L,…] for L&gt;=0
+and for x=self[:-L,…] and y=otherda[L:,…] for L&lt;0</p></li>
 <li><p><strong>month_of_year</strong> (<em>int</em>) – indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray</p></li>
 </ul>
 </dd>
