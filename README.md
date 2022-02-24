@@ -15,33 +15,7 @@ import xarray_extensions.general     # for general extensions
 
 Doing so will attach the following extra methods to xarray DataArray and Dataset objects:
 
- <p>xarray 0.19.0 or later is required, attempting to import these extensions with an earlier version of xarray will cause
-an exception to the thrown.  These methods extend xarray with timeseries and various other functionality.</p>
-<section id="dataarray-methods-timeseries">
-<h1>DataArray methods - timeseries<a class="headerlink" href="#dataarray-methods-timeseries" title="Permalink to this headline">¶</a></h1>
-<p>include <cite>import xarray_extensions.timeseries</cite> in your code to add these methods to xarray.DataArray</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="xarray_extensions.timeseries.deseasonalised">
-<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">deseasonalised</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.deseasonalised" title="Permalink to this definition">¶</a></dt>
-<dd><p>Obtain a deseasonalised DataArray based on a monthly climatology</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
-<li><p><strong>clim</strong> (<em>boolean</em>) – if True, return the climatology</p></li>
-<li><p><strong>abs</strong> (<em>boolean</em>) – if False, return monthly anomalies, otherwise return the anomalies plus the monthly means from the climatology</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an xarray.DataArray instance</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>xarray.DataArray</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
 <p>This function is attached to the DataArray class as a method when this module is imported</p>
-</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.timeseries.detrended">
@@ -168,7 +142,7 @@ is imported.</p>
 <dt class="sig sig-object py" id="xarray_extensions.timeseries.lagged_regression">
 <span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">lagged_regression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">otherda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.lagged_regression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain linear regression coefficients between this DataArray and another DataArray, with a series of lags applied.
-The other DataArray is treated as the y variable, this DataArray is treated as the x variable and the coefficients
+The other DataArray is treated as the x variable, this DataArray (self) is treated as the y variable and the coefficients
 returned are the values [m,c] from y = mx+c</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -213,7 +187,7 @@ is imported.</p>
 <dd><p>Obtain linear regression coefficients between this between a yearly timeseries extracted from this DataArray
 at a particular month and those from another DataArray, with a series of lags applied, and return the
 regression coefficients.</p>
-<p>The other DataArray is treated as the y variable, this DataArray is treated as the x variable and the coefficients
+<p>The other DataArray is treated as the x variable, this DataArray (self) is treated as the y variable and the coefficients
 returned are the values [m,c] from y = mx+c</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -249,8 +223,8 @@ is imported.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sla</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SLA</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
 <span class="n">sst</span> <span class="o">=</span> <span class="o">...</span> <span class="n">get</span> <span class="n">the</span> <span class="n">monthly</span> <span class="n">SST</span> <span class="k">as</span> <span class="n">a</span> <span class="n">DataArray</span>
 
-<span class="c1"># get the regression coefficients for linear model relating June SLA from May and April SSTs</span>
-<span class="c1"># the returned coefficient parameters  m,c are such that sst = m*sla + c</span>
+<span class="c1"># get the regression coefficients for linear model relating June SLA to May and April SSTs</span>
+<span class="c1"># the returned coefficient parameters for each lag m,c are such that sla = m*sst + c</span>
 <span class="n">correlation</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">lagged_regression_month_of_year</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">month_of_year</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
 </pre></div>
 </div>

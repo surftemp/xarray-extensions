@@ -203,12 +203,12 @@ class Test(unittest.TestCase):
                                    "lon": [lon for lon in range(nlons)]})
         da2 = da*2+1
 
-        da3 = da.lagged_regression(da2,lags=[-6,-3,0,3,6])
+        da3 = da2.lagged_regression(da,lags=[-6,-3,0,3,6])
         self.assertEqual(da3.dims,('lat','lon','lag','parameter'))
 
-        npt.assert_almost_equal(da3.data[:, :, 0], np.array([[[-2,1] for lat in range(nlons)] for lon in range(nlats)]),decimal=1)
-        npt.assert_almost_equal(da3.data[:, :, 2], np.array([[[2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
-        npt.assert_almost_equal(da3.data[:, :, 4], np.array([[[-2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=1)
+        npt.assert_almost_equal(da3.data[:, :, 0], np.array([[[-2,1] for lat in range(nlons)] for lon in range(nlats)]),decimal=3)
+        npt.assert_almost_equal(da3.data[:, :, 2], np.array([[[2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=3)
+        npt.assert_almost_equal(da3.data[:, :, 4], np.array([[[-2,1] for lat in range(nlons)] for lon in range(nlats)]), decimal=3)
 
         da4 = xr.DataArray(data=np.array([[[np.nan for i in range(1, 25)] for lon in range(nlons)] for lat in range(nlats)]),dims=["lat", "lon", "time"],
                            coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 1) for i in
@@ -311,11 +311,11 @@ class Test(unittest.TestCase):
             npt.assert_equal(da3.coords["lat"], np.array([lat for lat in range(nlats)]))
             npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
-            da4 = da.lagged_regression_month_of_year(da2, lags=[1], month_of_year=moy)
+            da4 = da2.lagged_regression_month_of_year(da, lags=[-1], month_of_year=moy)
             expected_coefficients = np.array([[[[2,0]] for lon in range(nlons)] for lat in range(nlats)])
             npt.assert_almost_equal(da4.data, expected_coefficients, decimal=3)
 
-            da5 = da.lagged_regression_month_of_year(da2neg, lags=[-12], month_of_year=moy)
+            da5 = da2neg.lagged_regression_month_of_year(da, lags=[12], month_of_year=moy)
             expected_coefficients = np.array([[[[-1,3]] for lon in range(nlons)] for lat in range(nlats)])
             npt.assert_almost_equal(da5.data, expected_coefficients, decimal=3)
 

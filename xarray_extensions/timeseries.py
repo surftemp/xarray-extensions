@@ -323,7 +323,7 @@ def lagged_correlation_month_of_year(self, otherda, lags, month_of_year, ci=None
 
     return result
 
-def __compute_regression(da,otherda,lag,idx,result):
+def __compute_regression(x_da,y_da,lag,idx,result):
 
     def linregression(x, y):
         mask = ~np.isnan(x) & ~np.isnan(y)
@@ -334,8 +334,8 @@ def __compute_regression(da,otherda,lag,idx,result):
             return np.array([slope, intercept])
 
     # compute regression for a particular lag
-    da_shift = da.shift({"time": -lag})
-    coeffs = xr.apply_ufunc(linregression, da_shift, otherda,
+    x_da_shift = x_da.shift({"time": -lag})
+    coeffs = xr.apply_ufunc(linregression, x_da_shift, y_da,
         input_core_dims=[['time'], ['time']], output_core_dims=[["parameter"]],
         vectorize=True, dask="parallelized", output_dtypes=['float64'])
 
@@ -346,7 +346,7 @@ def __compute_regression(da,otherda,lag,idx,result):
 def lagged_regression(self, otherda, lags):
     """
     Obtain linear regression coefficients between this DataArray and another DataArray, with a series of lags applied.
-    The other DataArray is treated as the y variable, this DataArray is treated as the x variable and the coefficients
+    The other DataArray is treated as the x variable, this DataArray (self) is treated as the y variable and the coefficients
     returned are the values [m,c] from y = mx+c
 
     Parameters
@@ -395,7 +395,7 @@ def lagged_regression(self, otherda, lags):
 
     for idx in range(len(lags)):
         lag = lags[idx]
-        __compute_regression(self,otherda,lag,idx,result)
+        __compute_regression(otherda,self,lag,idx,result)
 
     return result
 
@@ -406,7 +406,7 @@ def lagged_regression_month_of_year(self, otherda, lags, month_of_year):
     at a particular month and those from another DataArray, with a series of lags applied, and return the
     regression coefficients.
 
-    The other DataArray is treated as the y variable, this DataArray is treated as the x variable and the coefficients
+    The other DataArray is treated as the x variable, this DataArray (self) is treated as the y variable and the coefficients
     returned are the values [m,c] from y = mx+c
 
     Parameters
@@ -448,8 +448,8 @@ def lagged_regression_month_of_year(self, otherda, lags, month_of_year):
         sla = ... get the monthly SLA as a DataArray
         sst = ... get the monthly SST as a DataArray
 
-        # get the regression coefficients for linear model relating June SLA from May and April SSTs
-        # the returned coefficient parameters  m,c are such that sst = m*sla + c
+        # get the regression coefficients for linear model relating June SLA to May and April SSTs
+        # the returned coefficient parameters for each lag m,c are such that sla = m*sst + c
         correlation = sla.lagged_regression_month_of_year(sst, lags=[1,2], month_of_year=6)
     """
 
@@ -467,7 +467,7 @@ def lagged_regression_month_of_year(self, otherda, lags, month_of_year):
         lag = lags[idx]
         other_shift = otherda.shift({"time": lag})
         da1 = other_shift.sel(time=other_shift.time.dt.month.isin([month_of_year]))
-        __compute_regression(da0, da1, 0, idx, result)
+        __compute_regression(da1, da0, 0, idx, result)
 
     return result
 
