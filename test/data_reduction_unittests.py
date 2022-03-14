@@ -28,3 +28,6 @@ class Test(unittest.TestCase):
                           coords={"lat": range(0, nlats), "lon": range(0, nlons), "time": range(0, ntimes)})
         da2 = da.pca(model_callback=lambda x: print(x.explained_variance_ratio_))
         self.assertEqual(da2.values.shape,(400,400,2))
+
+if __name__ == '__main__':
+    unittest.main()

@@ -2,21 +2,48 @@
 
 library to add useful functions to xarray
 
-## Tools - Analysis
+## Installation
 
-To use these, clone this repo and place the root directory on your python path.  
+### Prerequisites
 
-Then import the module into your code using 
+You will need the `xarray` and `scipy` packages installed as pre-requisites.
+For data reduction functionality, you will also need `scikit-learn`.
+For plotting functionality, you will also need `matplotlib`.
 
+### Setting up
+
+Clone this repo and then -EITHER-
+
+* Place the cloned repo directory on your PYTHONPATH
+
+-OR-
+
+* Enter your python pip or conda environment and run `python setup.py install` to install the extensions into 
+  that environment (to uninstall from the environment, use `pip uninstall xarray_extensions`)
+
+## Using the extensions
+
+Print the version number:
+
+```python
+from xarray_extensions import VERSION
+print(VERSION)
 ```
-import xarray_extensions.timeseries  # for timeseries extensions
-import xarray_extensions.general     # for general extensions
+
+Import the module into your code using:
+
+```python
+import xarray_extensions.timeseries      # for timeseries extensions
+import xarray_extensions.data_reduction  # for data reduction extensions
+import xarray_extensions.plots           # for plots extensions
+import xarray_extensions.general         # for general extensions
 ```
 
 Doing so will attach the following extra methods to xarray DataArray and Dataset objects:
 
 <p>This function is attached to the DataArray class as a method when this module is imported</p>
 
+<section>
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.timeseries.detrended">
 <span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">detrended</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadratic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'year'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.detrended" title="Permalink to this definition">¶</a></dt>
