@@ -222,6 +222,34 @@ class Test(unittest.TestCase):
         npt.assert_equal(da3.coords["lat"],np.array([lat for lat in range(nlats)]))
         npt.assert_equal(da3.coords["lon"], np.array([lon for lon in range(nlons)]))
 
+    def test_lagged_correlation_month_of_year_timeseries(self):
+        # test that passing in a 1D array produces the same results as passing in the same array, expanded to 3D
+        nlats = 50
+        nlons = 80
+        ntimes = 48
+        rng = random.Random(0)
+        da = xr.DataArray(data=np.array(
+            [[[rng.random() for i in range(1, ntimes)] for lon in range(nlons)]
+             for lat in range(nlats)]),
+                          dims=["lat", "lon", "time"],
+                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 15,12,0,0) for i in
+                                           range(1, ntimes)],
+                                  "lat": [lat for lat in range(nlats)],
+                                  "lon": [lon for lon in range(nlons)]})
+
+        da2 = xr.DataArray(data=np.array([rng.random() for i in range(1, ntimes)]), dims=["time"],
+                           coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 15, 12, 0, 0)
+                                            for i in range(1, ntimes)]})
+
+        da3 = da2.expand_dims({"lat":nlats,"lon":nlons},axis=[0,1])
+
+        for moy in range(1,13):
+            da4 = da.lagged_correlation_month_of_year(da2,lags=[-1,0,1],month_of_year=moy)
+            self.assertEqual(da4.dims, ('lat', 'lon', 'lag'))
+            da5 = da.lagged_correlation_month_of_year(da3, lags=[-1, 0, 1], month_of_year=moy)
+            self.assertEqual(da5.dims, ('lat', 'lon', 'lag'))
+            npt.assert_equal(da4.data,da5.data)
+
     def test_lagged_correlation_month_of_year(self):
         nlats = 50
         nlons = 80
@@ -318,6 +346,36 @@ class Test(unittest.TestCase):
             da5 = da2neg.lagged_regression_month_of_year(da, lags=[12], month_of_year=moy)
             expected_coefficients = np.array([[[[-1,3]] for lon in range(nlons)] for lat in range(nlats)])
             npt.assert_almost_equal(da5.data, expected_coefficients, decimal=3)
+
+    def test_lagged_regression_month_of_year_timeseries(self):
+        # test that passing in a 1D array produces the same results as passing in the same array, expanded to 3D
+        nlats = 50
+        nlons = 80
+        ntimes = 48
+        rng = random.Random(0)
+        da = xr.DataArray(data=np.array(
+            [[[rng.random() for i in range(1, ntimes)] for lon in range(nlons)]
+             for lat in range(nlats)]),
+                          dims=["lat", "lon", "time"],
+                          coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 15,12,0,0) for i in
+                                           range(1, ntimes)],
+                                  "lat": [lat for lat in range(nlats)],
+                                  "lon": [lon for lon in range(nlons)]})
+
+        da2 = xr.DataArray(data=np.array([rng.random() for i in range(1, ntimes)]), dims=["time"],
+                           coords={"time": [datetime.datetime(2003 + (i - 1) // 12, 1 + ((i - 1) % 12), 15, 12, 0, 0)
+                                            for i in range(1, ntimes)]})
+
+        da3 = da2.expand_dims({"lat":nlats,"lon":nlons},axis=[0,1])
+        da3 = da3.assign_coords({"lat": [lat for lat in range(nlats)],
+                                  "lon": [lon for lon in range(nlons)]})
+
+        for moy in range(1,13):
+            da4 = da.lagged_regression_month_of_year(da2,lags=[-1,0,1],month_of_year=moy)
+            self.assertEqual(da4.dims, ('lat', 'lon', 'lag', 'parameter'))
+            da5 = da.lagged_regression_month_of_year(da3, lags=[-1, 0, 1], month_of_year=moy)
+            self.assertEqual(da5.dims, ('lat', 'lon', 'lag', 'parameter'))
+            npt.assert_equal(da4.data,da5.data)
 
     def test_safe_assign(self):
         ds = xr.Dataset()
