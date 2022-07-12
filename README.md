@@ -43,28 +43,56 @@ Doing so will attach the following extra methods to xarray DataArray and Dataset
 
 <p>This function is attached to the DataArray class as a method when this module is imported</p>
 
-<section>
+<section id="dataarray-methods-timeseries">
+<h1>DataArray methods - timeseries<a class="headerlink" href="#dataarray-methods-timeseries" title="Permalink to this heading">¶</a></h1>
+<p>include <cite>import xarray_extensions.timeseries</cite> in your code to add these methods to xarray.DataArray</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="xarray_extensions.timeseries.deseasonalised">
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">deseasonalised</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.deseasonalised" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain a deseasonalised DataArray based on a monthly climatology</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
+<li><p><strong>clim</strong> (<em>boolean</em>) – if True, return the climatology</p></li>
+<li><p><strong>abs</strong> (<em>boolean</em>) – if False, return monthly anomalies, otherwise return the anomalies plus the monthly means from the climatology</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an xarray.DataArray instance</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is attached to the DataArray class as a method when this module is imported</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.timeseries.detrended">
-<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">detrended</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadratic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'year'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.detrended" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">xarray_extensions.timeseries.</span></span><span class="sig-name descname"><span class="pre">detrended</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadratic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'year'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residuals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.timeseries.detrended" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain a detrended DataArray using a linear or quadratic function to fit a trend</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
 <li><p><strong>quadratic</strong> (<em>boolean</em>) – if True, fit a quadratic (degree=2) model, otherwise fit a linear (degree=1) model, along the time axis</p></li>
-<li><p><strong>coeff</strong> (<em>boolean</em>) – if True, return the model coefficients</p></li>
+<li><p><strong>coeff</strong> (<em>boolean</em>) – if True, return the model coefficients instead of the detrended values</p></li>
 <li><p><strong>coeff_scale</strong> (<em>str</em>) – set coefficients to work on a particular timescale, should be one of “year”, “day”, “second”.
 set to None to scale using nanoseconds (xarray’s default representation)</p></li>
 <li><p><strong>abs</strong> (<em>boolean</em>) – if False, return differences between the original values and the model values, otherwise return the differences
-plus the model means</p></li>
+plus the model means.  Ignored if coeff=True.</p></li>
+<li><p><strong>residuals</strong> (<em>boolean</em>) – if True, also return a second data array containing the sum of squared residuals from the fit</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an xarray.DataArray instance</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>if residuals==False, returns an xarray.DataArray instance, either the model (coeff=True) or detrended values (coeff=False)</p>
+<p>if residuals==True, returns a pair of xarray.DataArray instances (DA1,DA2) where DA1 is either the model (coeff=True) or detrended values (coeff=False) and DA2 holds the sums of the squares of the residuals.</p>
+</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>xarray.DataArray</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray.DataArray or (xarray.DataArray,xarray.DataArray)</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -79,7 +107,7 @@ return the correlation coefficients</p>
 <p>if significance threshold is to be calculated, return an extra parameter dimension with the correlation at index 0 and
 the two-tailed significance threshold at index 1</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
@@ -91,14 +119,14 @@ and self[:-L,…] with otherda[L:,…] for L&lt;0</p></li>
 (TODO, if not specified this should be computed from the data, currently return NaN)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
 dimension</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
 </dd>
 </dl>
@@ -124,7 +152,7 @@ and those from another DataArray, with a series of lags applied return the corre
 <p>if significance threshold is to be calculated, return an extra parameter dimension with the correlation at index 0 and
 the two-tailed significance threshold at index 1</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the main DataArray instance (to which this method is bound), assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have a “time” dimensions</p></li>
@@ -137,14 +165,14 @@ and self[:-L,…] with otherda[L:,…] for L&lt;0</p></li>
 (TODO, if not specified this should be computed from the data, currently return NaN)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
 dimension</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p></li>
 <li><p><strong>InvalidMonthOfYearException</strong> – if the month_of_year parameter is not an integer in the range 1-12</p></li>
@@ -172,7 +200,7 @@ is imported.</p>
 The other DataArray is treated as the x variable, this DataArray (self) is treated as the y variable and the coefficients
 returned are the values [m,c] from y = mx+c</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
@@ -181,15 +209,15 @@ where lag=L means that we compute the regression coefficients for x=self[L:,…]
 and for x=self[:-L,…] and y=otherda[L:,…] for L&lt;0</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
 dimension and an extra parameter dimension added (with size 2, where index 0 holds the slope value m and index 1
 holds the intercept value c)</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p>
 </dd>
 </dl>
@@ -217,7 +245,7 @@ regression coefficients.</p>
 <p>The other DataArray is treated as the x variable, this DataArray (self) is treated as the y variable and the coefficients
 returned are the values [m,c] from y = mx+c</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the main DataArray instance to which this method is bound, assumed to include a “time” dimension</p></li>
 <li><p><strong>otherda</strong> (<em>xarray.DataArray</em>) – the other DataArray against which the correlation is to be performed, assumed to have dimensions (time)</p></li>
@@ -227,15 +255,15 @@ and for x=self[:-L,…] and y=otherda[L:,…] for L&lt;0</p></li>
 <li><p><strong>month_of_year</strong> (<em>int</em>) – indicate which month (1=jan, 2=feb, etc) to analyse in the main DataArray</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>an xarray.DataArray instance having the same dimensions but with the time dimension replaced with the lags
 dimension and an extra parameter dimension added (with size 2, where index 0 holds the slope value m and index 1
 holds the intercept value c)</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>MisalignedTimeAxisException</strong> – if this array and the other array do not have identical time coordinates</p></li>
 <li><p><strong>InvalidMonthOfYearException</strong> – if the month_of_year parameter is not an integer in the range 1-12</p></li>
@@ -259,14 +287,14 @@ is imported.</p>
 
 </section>
 <section id="dataarray-methods-data-reduction">
-<h1>DataArray methods - data reduction<a class="headerlink" href="#dataarray-methods-data-reduction" title="Permalink to this headline">¶</a></h1>
+<h1>DataArray methods - data reduction<a class="headerlink" href="#dataarray-methods-data-reduction" title="Permalink to this heading">¶</a></h1>
 <p>include <cite>import xarray_extensions.data_reduction</cite> in your code to add these methods to xarray.DataArray</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.data_reduction.pca">
 <span class="sig-prename descclassname"><span class="pre">xarray_extensions.data_reduction.</span></span><span class="sig-name descname"><span class="pre">pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.data_reduction.pca" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract and return the principle components for this data array after reducing along a target dimension</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
 <li><p><strong>dimension</strong> (<em>str</em>) – the name of the target dimension to be reduced</p></li>
@@ -275,11 +303,11 @@ is imported.</p>
 (see <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html">https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html</a>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>an xarray.DataArray instance with the target dimension replaced by a dimension of a size
 controlled by the n_components parameter</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
 </dl>
@@ -292,7 +320,7 @@ controlled by the n_components parameter</p>
 <span class="sig-prename descclassname"><span class="pre">xarray_extensions.data_reduction.</span></span><span class="sig-name descname"><span class="pre">som</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridheight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_neighbourhood</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.data_reduction.som" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract and return the self organising map coordinates for this data array after reducing along a target dimension</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
 <li><p><strong>dimension</strong> (<em>str</em>) – the name of the target dimension to be reduced</p></li>
@@ -306,10 +334,10 @@ controlled by the n_components parameter</p>
 (see source code of this module)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>an xarray.DataArray instance with the target dimension replaced by a dimension of size 2</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
 </dl>
@@ -319,7 +347,7 @@ controlled by the n_components parameter</p>
 
 </section>
 <section id="dataarray-methods-plots">
-<h1>DataArray methods - plots<a class="headerlink" href="#dataarray-methods-plots" title="Permalink to this headline">¶</a></h1>
+<h1>DataArray methods - plots<a class="headerlink" href="#dataarray-methods-plots" title="Permalink to this heading">¶</a></h1>
 <p>include <cite>import xarray_extensions.plots</cite> in your code to add these methods to xarray.DataArray</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.plots.rgb_plot">
@@ -327,7 +355,7 @@ controlled by the n_components parameter</p>
 <dd><p>Plot a 3D array relying on a selected dimension of size 1, 2 or 3, for example, an array returned from the
 data reduction operators som or pca</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.DataArray</em>) – the DataArray instance to which this method is bound</p></li>
 <li><p><strong>dimension</strong> (<em>str</em>) – the name of the target dimension used to derive colour</p></li>
@@ -343,7 +371,7 @@ data reduction operators som or pca</p>
 
 </section>
 <section id="dataset-methods-general">
-<h1>Dataset Methods - general<a class="headerlink" href="#dataset-methods-general" title="Permalink to this headline">¶</a></h1>
+<h1>Dataset Methods - general<a class="headerlink" href="#dataset-methods-general" title="Permalink to this heading">¶</a></h1>
 <p>include <cite>import xarray_extensions.general</cite> in your code to add these methods to xarray.Dataset</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="xarray_extensions.general.safe_assign">
@@ -351,7 +379,7 @@ data reduction operators som or pca</p>
 <dd><p>Attach a DataArray as a variable to a Dataset, working around a bug in xarray when using simple assignment
 See <a class="reference external" href="https://github.com/pydata/xarray/issues/2245">https://github.com/pydata/xarray/issues/2245</a> (dimension attributes are sometimes lost)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.Dataset</em>) – the DataSet instance to which the DataArray is to be assigned</p></li>
 <li><p><strong>da</strong> (<em>xarray.DataArray</em>) – the DataArray to assign</p></li>
@@ -368,20 +396,20 @@ See <a class="reference external" href="https://github.com/pydata/xarray/issues/
 <span class="sig-prename descclassname"><span class="pre">xarray_extensions.general.</span></span><span class="sig-name descname"><span class="pre">longitude_center_zero</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lon'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xarray_extensions.general.longitude_center_zero" title="Permalink to this definition">¶</a></dt>
 <dd><p>Center longitude axis on 0.  If the original longitude axis ranges from 0 &lt;= lon &lt; 360, modify the dataset so that the new one should range from -180 to 180.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> (<em>xarray.Dataset</em>) – the DataSet instance to be modified in place</p></li>
 <li><p><strong>longitude_name</strong> (<em>str</em>) – the name of the longitude dimension</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new dataset with the longitude axis adjusted and data arrays shifted accordingly.  The original attributes of the
 longitude dimension are retained, but valid_min and valid_max are modified (if present)</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.Dataset</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If the input longitude axis has values outside the range 0 &lt;= lon &lt; 360</p>
 </dd>
 </dl>

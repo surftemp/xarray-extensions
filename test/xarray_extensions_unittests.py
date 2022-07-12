@@ -79,6 +79,74 @@ class Test(unittest.TestCase):
         exp_ds3coeffs = np.array([[[1,0],[-1,12]]])
         npt.assert_almost_equal(ds3coeffs.data, exp_ds3coeffs)
 
+    def test_detrended_residuals(self):
+        """Test that calling the polyfit extension with residuals=True returns the expected values"""
+        # no trend, detrending should have no effect
+        da1 = xr.DataArray(data=np.array([[[3 for i in range(1, 13)], [4 for i in range(1, 13)]]]),
+                           dims=["lat", "lon", "time"],
+                           coords={"time": [datetime.datetime(2003, i, 1) for i in range(1, 13)]})
+
+        exp_residuals = np.array([[0.0,0.0]]) # residuals should be zero
+        _, residuals_sumsq = da1.detrended(coeff=True, residuals=True)
+        npt.assert_almost_equal(residuals_sumsq.data, exp_residuals, decimal=10)
+
+        # no trend but with a pair of "balancing" outliers
+        def v1(index):
+            # constant values of 3 with 1 value at 3+10 and 1 value at 3-10
+            if index == 3:
+                return 13
+            elif index == 7:
+                return -7
+            else:
+                return 3
+
+        def v2(index):
+            # constant values of 4 with 1 value 4+20 and 1 value 4-20
+            if index == 4:
+                return 24
+            elif index == 6:
+                return -16
+            else:
+                return 4
+
+        tlen_da2 = 512
+        da2 = xr.DataArray(data=np.array([[[v1(i) for i in range(1, tlen_da2)], [v2(i) for i in range(1, tlen_da2)]]]),
+                       dims=["lat", "lon", "time"],
+                       coords={"time": [datetime.datetime(2003, 1, 1) + datetime.timedelta(days=i) for i in range(1, tlen_da2)]})
+        _, residuals_sumsq = da2.detrended(coeff=True, residuals=True)
+        exp_da2_residuals = np.array([[200.0, 800.0]])  # residuals should be 2*(10**2) and 2*(20**2) respectively
+        npt.assert_almost_equal(residuals_sumsq.data, exp_da2_residuals, decimal=4)
+
+        # linear trend but with a pair of "balancing" outliers
+        def v3(index):
+            # constant values of 3+index with 1 value at 3+index+10 and 1 value at 3+index-10
+            if index == 3:
+                return 3+index+10
+            elif index == 7:
+                return 3+index-10
+            else:
+                return 3+index
+
+        def v4(index):
+            # constant values of 4+2*index with 1 value at 4+2*index+30 and 1 value at 4+2*index-30
+            if index == 4:
+                return 4+2*index+30
+            elif index == 6:
+                return 4+2*index-30
+            else:
+                return 4+2*index
+
+        # test returning the residuals along with fitted values
+        tlen_da3 = 1024
+        da3 = xr.DataArray(data=np.array([[[v3(i) for i in range(1, tlen_da3)], [v4(i) for i in range(1, tlen_da3)]]]),
+                           dims=["lat", "lon", "time"],
+                           coords={"time": [datetime.datetime(2003, 1, 1) + datetime.timedelta(days=i) for i in
+                                            range(1, tlen_da3)]})
+        _, residuals_sumsq = da3.detrended(residuals=True)
+        exp_da3_residuals = np.array([[200.0, 1800.0]])  # residuals should be 2*(10**2) and 2*(30**2) respectively
+        npt.assert_almost_equal(residuals_sumsq.data, exp_da3_residuals, decimal=4)
+
+
     def test_lagged_correlation_1D(self):
         dts = [datetime.datetime(2013,4,15,12,0,0),
                datetime.datetime(2013,5,15,12,0,0),

@@ -55,7 +55,7 @@ def deseasonalised(self, clim=False, abs=True):
             return anomalies
 
 
-def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False):
+def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False, residuals=False):
     """
     Obtain a detrended DataArray using a linear or quadratic function to fit a trend
 
@@ -66,18 +66,22 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False)
     quadratic: boolean
         if True, fit a quadratic (degree=2) model, otherwise fit a linear (degree=1) model, along the time axis
     coeff: boolean
-        if True, return the model coefficients
+        if True, return the model coefficients instead of the detrended values
     coeff_scale: str
         set coefficients to work on a particular timescale, should be one of "year", "day", "second".
         set to None to scale using nanoseconds (xarray's default representation)
     abs: boolean
         if False, return differences between the original values and the model values, otherwise return the differences
-        plus the model means
+        plus the model means.  Ignored if coeff=True.
+    residuals: boolean
+        if True, also return a second data array containing the sum of squared residuals from the fit
 
     Returns
     -------
-    xarray.DataArray
-        an xarray.DataArray instance
+    xarray.DataArray or (xarray.DataArray,xarray.DataArray)
+        if residuals==False, returns an xarray.DataArray instance, either the model (coeff=True) or detrended values (coeff=False)
+
+        if residuals==True, returns a pair of xarray.DataArray instances (DA1,DA2) where DA1 is either the model (coeff=True) or detrended values (coeff=False) and DA2 holds the sums of the squares of the residuals.
 
     Notes
     -----
@@ -85,7 +89,7 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False)
     This function is attached to the DataArray class as a method when this module is imported
     """
     degree = 2 if quadratic else 1
-    coeffs = self.polyfit(dim="time", deg=degree)
+    coeffs = self.polyfit(dim="time", deg=degree, full=residuals)
     coeffs.load()
 
     if coeff:
@@ -101,29 +105,31 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False)
         else:
             raise Exception("coeff_scale should be one of year,day,second, or None")
 
-        coeffs = coeffs["polyfit_coefficients"].data
+        coeffs_data = coeffs["polyfit_coefficients"].data
         # first dimension is the degree, highest power first
         if scale_factor != 1:
             if quadratic:
-                coeffs[0,:,:] *= (scale_factor * scale_factor)
-                coeffs[1,:,:] *= scale_factor
+                coeffs_data[0,:,:] *= (scale_factor * scale_factor)
+                coeffs_data[1,:,:] *= scale_factor
             else:
-                coeffs[0,:,:] *= scale_factor
+                coeffs_data[0,:,:] *= scale_factor
 
         degree_coordinates = [2, 1, 0] if quadratic else [1, 0]
         degree_dimension = "degree2" if quadratic else "degree1"
 
         # for some reason transposing the dimensions helps when assigning the DataArray into the original DataSet
-        return xr.DataArray(data=coeffs.transpose([1, 2, 0]),
+        model_da = xr.DataArray(data=coeffs_data.transpose([1, 2, 0]),
                             dims=["lat", "lon", degree_dimension],
                             coords={"lat": self.coords["lat"], "lon": self.coords["lon"],
                                     degree_dimension: degree_coordinates})
+        return (model_da, coeffs["polyfit_residuals"]) if residuals else model_da
+
     else:
         trend = xr.polyval(self["time"], coeffs["polyfit_coefficients"])
         diffs = self - trend
         if abs:
             diffs = diffs + trend.mean(dim="time")
-        return diffs
+        return (diffs, coeffs["polyfit_residuals"]) if residuals else diffs
 
 class MisalignedTimeAxisException(Exception):
 
