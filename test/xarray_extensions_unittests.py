@@ -12,6 +12,20 @@ import xarray_extensions.general
 
 class Test(unittest.TestCase):
 
+    def test_deseasonalised_1d(self):
+        # degenerate case with no seasonal variation, deseasonalisation should have no effect
+        da1 = xr.DataArray(data=np.array([3 for i in range(1, 13)]),
+                           dims=["time"],
+                           coords={"time": [datetime.datetime(2003, i, 1) for i in range(1, 13)]})
+        ds1a = da1.deseasonalised(clim=False, abs=True)
+        npt.assert_almost_equal(da1.data, ds1a.data)
+
+        ds1b = da1.deseasonalised(clim=False, abs=False)
+        npt.assert_almost_equal(np.array([0 for i in range(1,13)]), ds1b.data)
+
+        ds1c = da1.deseasonalised(clim=True)
+        npt.assert_almost_equal(np.array([3 for i in range(1, 13)]), ds1c.data)
+
     def test_deseasonalised(self):
         # degenerate case with no seasonal variation, deseasonalisation should have no effect
         da1 = xr.DataArray(data=np.array([[[3 for i in range(1,13)],[4 for i in range(1,13)]]]),
@@ -37,6 +51,37 @@ class Test(unittest.TestCase):
         # abs values should deseasonalise to constants 3, 4
         ds2abs = da2.deseasonalised(clim=False, abs=True)
         npt.assert_almost_equal(ds2abs.data, np.array([[[1.0 for i in range(1,25)],[3.0 for i in range(1,25)]]]))
+
+    def test_detrended_1d(self):
+        # no trend, detrending should have no effect
+        da1 = xr.DataArray(data=np.array([3 for i in range(1, 13)]),
+                           dims=["time"],
+                           coords={"time": [datetime.datetime(2003, i, 1) for i in range(1, 13)]})
+        ds1, residuals = da1.detrended(coeff=False, abs=True, residuals=True)
+        npt.assert_almost_equal(da1.data, ds1.data)
+        npt.assert_almost_equal(residuals.data, np.array([0 for i in range(1,13)]))
+
+        ds1coeffs = da1.detrended(coeff=True)
+        exp_ds1coeffs = np.array([0,3])
+        npt.assert_almost_equal(ds1coeffs.data, exp_ds1coeffs)
+
+        # generate a perfect linear trend, detrending should yield roughly constant (mean) values
+        upward_trend = [0 + 2*(i - 1) for i in range(1, 13)]
+
+        # test with a time dimension named other than the default "time"
+        da2 = xr.DataArray(data=np.array(upward_trend),
+                           dims=["start_time"],
+                           coords={"start_time": [datetime.datetime(2003, i, 1) for i in range(1, 13)]})
+
+        exp_detrended = np.array([0.0 for i in range(1, 13)])
+        exp_detrended_abs = np.array([np.mean(upward_trend) for i in range(1, 13)])
+
+        ds2 = da2.detrended(coeff=False, abs=False, time_dimension="start_time")
+        ds2abs = da2.detrended(coeff=False, abs=True, time_dimension="start_time")
+        # there is a bit of "noise" in the fitted coefficients
+        npt.assert_almost_equal(exp_detrended, ds2.data, decimal=1)
+        npt.assert_almost_equal(exp_detrended_abs, ds2abs.data, decimal=1)
+
 
     def test_detrended(self):
         # no trend, detrending should have no effect
@@ -78,6 +123,13 @@ class Test(unittest.TestCase):
         ds3coeffs = da3.detrended(coeff=True, coeff_scale=None)
         exp_ds3coeffs = np.array([[[1,0],[-1,12]]])
         npt.assert_almost_equal(ds3coeffs.data, exp_ds3coeffs)
+
+        # test with a different input dimension order where time appears first
+        da4 = da1.transpose("time","lat","lon")
+        # check coeffs, constant term should be non-zero
+        ds4coeffs = da4.detrended(coeff=True) # coeffs should be ("degreeX","lat","lon")
+        exp_ds4coeffs = np.array([[[0, 0]], [[3, 4]]])
+        npt.assert_almost_equal(ds4coeffs.data, exp_ds4coeffs)
 
     def test_detrended_residuals(self):
         """Test that calling the polyfit extension with residuals=True returns the expected values"""

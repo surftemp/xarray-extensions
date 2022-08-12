@@ -20,18 +20,20 @@ import math
 from .check_version import check_version
 check_version()
 
-def deseasonalised(self, clim=False, abs=True):
+def deseasonalised(self, clim=False, abs=True, time_dimension="time"):
     """
     Obtain a deseasonalised DataArray based on a monthly climatology
 
     Parameters
     ----------
     self: xarray.DataArray
-        the DataArray instance to which this method is bound
+        the DataArray instance to which this method is bound, must contain a time dimension
     clim: boolean
         if True, return the climatology
     abs: boolean
         if False, return monthly anomalies, otherwise return the anomalies plus the monthly means from the climatology
+    time_dimension: str
+        the name of the time dimension within this DataArray
 
     Returns
     -------
@@ -44,25 +46,25 @@ def deseasonalised(self, clim=False, abs=True):
     This function is attached to the DataArray class as a method when this module is imported
     """
     # get the seasonal means
-    monthly_means = self.groupby("time.month").mean()  # (month,lat,lon)
+    monthly_means = self.groupby(time_dimension+".month").mean()  # (month,lat,lon) for example
     if clim:
         return monthly_means
     else:
-        anomalies = self.groupby("time.month") - monthly_means
+        anomalies = self.groupby(time_dimension+".month") - monthly_means
         if abs:
             return anomalies + monthly_means.mean(dim="month")
         else:
             return anomalies
 
 
-def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False, residuals=False):
+def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False, residuals=False, time_dimension="time"):
     """
     Obtain a detrended DataArray using a linear or quadratic function to fit a trend
 
     Parameters
     ----------
     self: xarray.DataArray
-        the DataArray instance to which this method is bound
+        the DataArray instance to which this method is bound, must contain a time dimension
     quadratic: boolean
         if True, fit a quadratic (degree=2) model, otherwise fit a linear (degree=1) model, along the time axis
     coeff: boolean
@@ -75,6 +77,8 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False,
         plus the model means.  Ignored if coeff=True.
     residuals: boolean
         if True, also return a second data array containing the sum of squared residuals from the fit
+    time_dimension: str
+        the name of the time dimension within this DataArray
 
     Returns
     -------
@@ -88,8 +92,10 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False,
 
     This function is attached to the DataArray class as a method when this module is imported
     """
+
+
     degree = 2 if quadratic else 1
-    coeffs = self.polyfit(dim="time", deg=degree, full=residuals)
+    coeffs = self.polyfit(dim=time_dimension, deg=degree, full=residuals)
     coeffs.load()
 
     if coeff:
@@ -106,29 +112,36 @@ def detrended(self, quadratic=False, coeff=False, coeff_scale="year", abs=False,
             raise Exception("coeff_scale should be one of year,day,second, or None")
 
         coeffs_data = coeffs["polyfit_coefficients"].data
+
         # first dimension is the degree, highest power first
         if scale_factor != 1:
             if quadratic:
-                coeffs_data[0,:,:] *= (scale_factor * scale_factor)
-                coeffs_data[1,:,:] *= scale_factor
+                coeffs_data[0] *= (scale_factor * scale_factor)
+                coeffs_data[1] *= scale_factor
             else:
-                coeffs_data[0,:,:] *= scale_factor
+                coeffs_data[0] *= scale_factor
 
         degree_coordinates = [2, 1, 0] if quadratic else [1, 0]
         degree_dimension = "degree2" if quadratic else "degree1"
 
         # for some reason transposing the dimensions helps when assigning the DataArray into the original DataSet
-        model_da = xr.DataArray(data=coeffs_data.transpose([1, 2, 0]),
-                            dims=["lat", "lon", degree_dimension],
-                            coords={"lat": self.coords["lat"], "lon": self.coords["lon"],
-                                    degree_dimension: degree_coordinates})
+        other_dimensions = [dim for dim in self.dims if dim != time_dimension]
+        coords = { dim:self.coords[dim] for dim in other_dimensions }
+        coords[degree_dimension] = degree_coordinates
+        # work out output dimensions, swapping the time dimension for the degree dimension
+        sub = lambda dim_name: dim_name if dim_name != time_dimension else degree_dimension
+        output_dimensions = [sub(dim) for dim in self.dims]
+
+        model_da = xr.DataArray(data=coeffs_data,
+                            dims=tuple([degree_dimension]+other_dimensions),
+                            coords=coords).transpose(*output_dimensions)
         return (model_da, coeffs["polyfit_residuals"]) if residuals else model_da
 
     else:
-        trend = xr.polyval(self["time"], coeffs["polyfit_coefficients"])
+        trend = xr.polyval(self[time_dimension], coeffs["polyfit_coefficients"])
         diffs = self - trend
         if abs:
-            diffs = diffs + trend.mean(dim="time")
+            diffs = diffs + trend.mean(dim=time_dimension)
         return (diffs, coeffs["polyfit_residuals"]) if residuals else diffs
 
 class MisalignedTimeAxisException(Exception):
@@ -215,8 +228,7 @@ def lagged_correlation(self, otherda, lags, ci=None, dof=None):
     ci: float
        specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)
     dof: int
-       set the degrees of freedom manually
-       (TODO, if not specified this should be computed from the data, currently return NaN)
+       set the degrees of freedom manually, required if ci is specified
 
     Returns
     -------
@@ -279,8 +291,8 @@ def lagged_correlation_month_of_year(self, otherda, lags, month_of_year, ci=None
     ci: float
        specify the confidence interval if significance is to be calculated (for example, specify 0.05 for 95% threshold)
     dof: int
-       set the degrees of freedom manually
-       (TODO, if not specified this should be computed from the data, currently return NaN)
+       set the degrees of freedom manually, required if ci is specified
+
 
     Returns
     -------
